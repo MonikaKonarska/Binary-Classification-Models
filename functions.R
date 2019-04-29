@@ -80,7 +80,31 @@ DescribeVariables <- function(data) {
 
 
 
-
+GiveDate <- function(date_month_year) {
+  # Args:
+  # date_month_year: this parametr is character with format for example: Apr-2019
+  
+  month <- substr(date_month_year, 1, 3)
+  year = substr(date_month_year, regexpr("-", date_month_year)[1]+1, nchar(date_month_year))
+  
+  tmp <- data.frame(data_string=date_month_year, month, year) %>%
+    mutate(monthInNumber = case_when(month == "Jan" ~ 1,
+                                     month == "Feb" ~ 2,
+                                     month == "Mar" ~ 3,
+                                     month == "Apr" ~ 4,
+                                     month == "May" ~ 5,
+                                     month == "Jun" ~ 6,
+                                     month == "Jul" ~ 7,
+                                     month == "Aug" ~ 8,
+                                     month == "Sep" ~ 9,
+                                     month == "Oct" ~ 10,
+                                     month == "Nov" ~ 11,
+                                     month == "Dec" ~ 12 ),
+           date = as.Date(paste(year, monthInNumber, "01", sep = "-")))
+  
+  return(tmp$date)
+  
+}
 
 
 
