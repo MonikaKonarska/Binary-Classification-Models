@@ -43,6 +43,10 @@ dataWork <- data[, variablesToGet]
 
 
 
-
+dataWork <- dataWork %>%
+  mutate(funded_loan_date = GiveDate(issue_d),
+         earliest_cr_line_date = GiveDate(earliest_cr_line),
+         last_credit_pull_date = GiveDate(last_credit_pull_d)) %>%
+  select(-c("issue_d","earliest_cr_line", "last_credit_pull_d"))
 
 
