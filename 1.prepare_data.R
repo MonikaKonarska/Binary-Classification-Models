@@ -8,8 +8,8 @@ library(scales)
 library(openxlsx)
 library(tree)
 
-source("prepare_data_func.R")
-source("graphics_data_func.R")
+source("functions.R")
+
 
 
 saveResultsPath <- file.path(getwd(), "dataResults")
@@ -24,4 +24,12 @@ data$target <- factor(case_when(data$loan_status == "Fully Paid"  ~ 0,
                                 data$loan_status == "Late (31-120 days)" ~ 1,
                                 data$loan_status == "Default Does not meet the credit policy. Status:Charged Off" ~ 1), levels = c(0, 1))
 data <- data[which(!is.na(data$target)), ]
+
+
+
+
+
+
+
+
 
