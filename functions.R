@@ -1,18 +1,15 @@
-
-# Multiple plot function
-# 
-# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
-# then plot 1 will go in the upper left, 2 will go in the upper right, and
-# 3 will go all the way across the bottom.
-# source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
-
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  # Multiple plot function
+  # 
+  # If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+  # then plot 1 will go in the upper left, 2 will go in the upper right, and
+  # 3 will go all the way across the bottom.
+  # source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+  
   library(grid)
-  
   # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
+  plots    <- c(list(...), plotlist)
+  numPlots <- length(plots)
   
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
@@ -43,11 +40,9 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 
 
-
-
-DescribeVariables <- function(data) {
+describe_variables <- function(data) {
   #Args:
-  # data: data frame objects with data to get basic infromations about variables
+  #data: data frame object
   
   if (! is.data.frame(data)) {
     stop("Object data is not a data frame.")
@@ -60,32 +55,27 @@ DescribeVariables <- function(data) {
   for (var in seq_along(names(data))) {
     
     var_name <- names(data[var])
-    
-    describeTable[var, "variable"]  <- var_name
-    describeTable[var, "type"]  <- class(data[[var]])
-    describeTable[var, "numberOfNa"]  <- sum(is.na(data[[var]]))
-    describeTable[var, "p_numberOfNa"]  <- describeTable[var, "numberOfNa"]/ rows
-    describeTable[var, "uniqueValues"]  <- length(unique(data[[var]]))
-    describeTable[var, "p_uniqueValues"]  <- describeTable[var,"uniqueValues"]/rows
-    
-    
-    describeTable[var, "zeros"]  <- sum(data[[var]]== 0 )
-    describeTable[var, "p_zeros"]  <- ifelse(!is.na(describeTable[var, "zeros"]),
-                                             describeTable[var, "zeros"]/ rows,
-                                             describeTable[var, "zeros"])
-    
+    describeTable[var, "variable"]       <- var_name
+    describeTable[var, "type"]           <- class(data[[var]])
+    describeTable[var, "numberOfNa"]     <- sum(is.na(data[[var]]))
+    describeTable[var, "p_numberOfNa"]   <- describeTable[var, "numberOfNa"]/ rows
+    describeTable[var, "uniqueValues"]   <- length(unique(data[[var]]))
+    describeTable[var, "p_uniqueValues"] <- describeTable[var,"uniqueValues"]/rows
+    describeTable[var, "zeros"]          <- sum(data[[var]] == 0 )
+    describeTable[var, "p_zeros"]        <- ifelse(!is.na(describeTable[var, "zeros"]),
+                                                   describeTable[var, "zeros"]/ rows,
+                                                   describeTable[var, "zeros"])
   }
   return(describeTable)
 }
 
 
-
-GiveDate <- function(date_month_year) {
+convert_date_from_month_year <- function(date_month_year) {
   # Args:
-  # date_month_year: this parametr is character with format for example: Apr-2019
+  # date_month_year: this parametr is type character with format for example: Apr-2019
   
   month <- substr(date_month_year, 1, 3)
-  year = substr(date_month_year, regexpr("-", date_month_year)[1]+1, nchar(date_month_year))
+  year  <- substr(date_month_year, regexpr("-", date_month_year)[1]+1, nchar(date_month_year))
   
   tmp <- data.frame(data_string=date_month_year, month, year) %>%
     mutate(monthInNumber = case_when(month == "Jan" ~ 1,
@@ -103,8 +93,4 @@ GiveDate <- function(date_month_year) {
            date = as.Date(paste(year, monthInNumber, "01", sep = "-")))
   
   return(tmp$date)
-  
 }
-
-
-
