@@ -109,7 +109,6 @@ changeCharacter2FactorVariableWithLackGroup <- function(data, variable_character
   if(is.null(variable_character)) {
     varTypeAll <- sapply(data, class)
     varChar <- names(varTypeAll[grep(x = varTypeAll, pattern = "character")])
-    
     for(zm in varChar) {
       data[,is.na(zm)] <- 'LACK'
       lev <- unique(data[[zm]])
