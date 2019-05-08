@@ -26,7 +26,7 @@ data <- data[which(!is.na(data$target)), ]
 
 
 
-structureData <- DescribeVariables(data)
+structureData <- describe_variables(data)
 
 levelOfNA <- 0.95
 pOfUniqueValues <- 0.30
