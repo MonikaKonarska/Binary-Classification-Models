@@ -35,11 +35,16 @@ variablesAnotherToDelete    <- c("loan_status","id", "member_id", "loan_amnt", "
 
 variables <- names(data)
 variablesToGet <- variables[!variables %in% c(variablesWithalotNA, variablesWithalotUniqueText,  variablesFromFeature, variablesAnotherToDelete, variablesWithOneValue)]  
-
 dataWork <- data[, variablesToGet]
+
 dataWork <- dataWork %>%
   mutate(funded_loan_date = convert_date_from_month_year(issue_d),
          earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
          last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) %>%
   select(-c("issue_d","earliest_cr_line", "last_credit_pull_d"))
+
+dataWork <- changeCharacter2FactorVariableWithLackGroup(dataWork)
+
+variablesWithLargeCategories <- findLargeCategories(data = dataWork[,which(names(dataWork) != "target")], minLevelOfLargeCategoryInAll = 0.9)
+dataWork <- dataWork %>% select(-c(variablesWithLargeCategories) )
 
