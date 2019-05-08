@@ -123,6 +123,38 @@ changeCharacter2FactorVariableWithLackGroup <- function(data, variable_character
 }
 
 
+findLargeCategories <- function(data, minLevelOfLargeCategoryInAll = 0.70, searchFactors = TRUE) {
+  # Function finds variables with a huge percentage of one category in variable
+  # Args:
+  #  data: data as data frame
+  #  minLevelOfLargeCategoryInAll: the minimum level of percentage of one category in variable
+  #  searchFactors: TRUE if looking for only in factor variables
+  
+  typesVariables <- sapply(data, class)
+  if(searchFactors) {
+    variablesToCount <- names(typesVariables[which(typesVariables == 'factor')])
+  } else {
+    variablesToCount <- names(typesVariables)
+  }
+  variablesWithCategories        <- vector(length = length(variablesToCount), mode = 'numeric') 
+  names(variablesWithCategories) <- variablesToCount
+  
+  for(i in variablesToCount) {
+    categoriesAmount                  <- table(data[[i]])
+    maxAmount                         <- categoriesAmount[which.max(categoriesAmount)]
+    maxAmountCategory                 <- names(maxAmount)
+    percentOfMaxAmountCategory        <- maxAmount/sum(categoriesAmount)
+    variablesWithCategories[[i]]      <- percentOfMaxAmountCategory
+  }
+  variablesWithLargeCategories        <- variablesWithCategories[which(variablesWithCategories >= minLevelOfLargeCategoryInAll)]
+  return(variablesWithLargeCategories)
+}
+
+
+
+
+
+
 
 
 
