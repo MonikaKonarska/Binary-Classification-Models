@@ -69,7 +69,9 @@ dataWork %>%
 
 
 set.seed(1234)
-div <- 0.6
+divTrain <- 0.6
+divTest  <- 0.2
+divValid <- 0.2
 group_by_time <- 'month'
 
 dataToTranTestValid <- dataWork %>%
@@ -78,4 +80,15 @@ dataToTranTestValid <- dataWork %>%
 dataToOutOfTime <- dataWork %>%
   filter(funded_loan_date > modelingTimeInterval$minDate %m+% years(2) & funded_loan_date <= modelingTimeInterval$maxDate) %>%
   summarise(n())
+
+
+dataToTranTestValid$group <- sample(c('train', 'test', 'valid'), size = nrow(dataToTranTestValid), prob = c(divTrain, divTest,  divValid), replace = TRUE)
+
+dataTrain  <- dataToTranTestValid %>% filter(group == "train")
+dataTest   <- dataToTranTestValid %>% filter(group == "test")
+dataValid  <- dataToTranTestValid %>% filter(group == "valid")
+
+
+
+
 
