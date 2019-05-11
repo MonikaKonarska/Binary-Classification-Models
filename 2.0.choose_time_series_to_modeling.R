@@ -1,10 +1,18 @@
 library(tidyverse)
-library(reshape2)
+library(reshape)
 library(ggplot2)
 library(lubridate)
 
+set.seed(1234)
 dataPath <- file.path(getwd(), "data")
 load(file.path(dataPath, "dataWork.RData"))
+
+numberOfMinObsInMonth      <- 1500
+numberOfMinDefaultsInMonth <- 500
+divTrain <- 0.6
+divTest  <- 0.2
+divValid <- 0.2
+group_by_time <- 'month'
 
 dataWork %>%
   mutate(target = as.factor(as.numeric(as.character(target)))) %>%
@@ -32,8 +40,6 @@ defaultRates<- defaultRates %>%
          badRate = bads/goods,
          N = goods+bads)
 
-numberOfMinObsInMonth      <- 1500
-numberOfMinDefaultsInMonth <- 500
 
 modelingTimeInterval <- defaultRates %>%
   filter(N > numberOfMinObsInMonth & bads >= numberOfMinDefaultsInMonth) %>%
@@ -68,11 +74,7 @@ dataWork %>%
   theme(plot.title = element_text(hjust = 0.5))
 
 
-set.seed(1234)
-divTrain <- 0.6
-divTest  <- 0.2
-divValid <- 0.2
-group_by_time <- 'month'
+
 
 dataToTranTestValid <- dataWork %>%
   filter(funded_loan_date >= modelingTimeInterval$minDate & funded_loan_date <= modelingTimeInterval$minDate %m+% years(2))
@@ -88,7 +90,5 @@ dataTrain  <- dataToTranTestValid %>% filter(group == "train")
 dataTest   <- dataToTranTestValid %>% filter(group == "test")
 dataValid  <- dataToTranTestValid %>% filter(group == "valid")
 
-
-
-
+save(dataTrain, dataTest, dataValid, file = file.path(dataPath, "dataToModeling.Rdata") )
 
