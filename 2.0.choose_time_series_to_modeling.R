@@ -74,8 +74,6 @@ dataWork %>%
   theme(plot.title = element_text(hjust = 0.5))
 
 
-
-
 dataToTranTestValid <- dataWork %>%
   filter(funded_loan_date >= modelingTimeInterval$minDate & funded_loan_date <= modelingTimeInterval$minDate %m+% years(2))
 
@@ -91,4 +89,4 @@ dataTest   <- dataToTranTestValid %>% filter(group == "test")
 dataValid  <- dataToTranTestValid %>% filter(group == "valid")
 
 save(dataTrain, dataTest, dataValid, file = file.path(dataPath, "dataToModeling.Rdata") )
-
+save(dataToOutOfTime, file = file.path(dataPath, "dataToOutOfTime.Rdata"))
