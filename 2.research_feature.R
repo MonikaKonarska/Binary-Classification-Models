@@ -34,4 +34,12 @@ dataTrain$emp_length <- ifelse(as.character(dataTrain$emp_length) == 'n/a', 'LAC
 dataTrain$emp_length <- factor(dataTrain$emp_length, levels = sort(unique(dataTrain$emp_length)))
 
 
+variablesWithNA <- c()
+
+for (i in seq_along(attributesOfVariables)) {
+  if(sum(grepl(pattern = "NA", x = names(attributesOfVariables[[i]]))) > 0) {
+    nameVariable    <- names(attributesOfVariables[i])
+    variablesWithNA <- c(nameVariable, variablesWithNA)
+  }
+}
 
