@@ -1,66 +1,37 @@
 library(tidyverse)
 library(reshape2)
 library(ggplot2)
-
+library(lubridate)
 
 dataPath <- file.path(getwd(), "data")
-load(file.path(dataPath, "dataWork.RData"))
+load(file.path(dataPath, "dataToModeling.Rdata"))
+
+# for test decision to reduce observations
+dataTrain <- dataTrain %>% filter(funded_loan_date >= '2013-01-01')
+dataTrain$month <- substr(dataTrain$funded_loan_date, start = 1, stop = 7)
+dataTrain$month <- factor(dataTrain$month, levels = sort(unique(dataTrain$month)))
 
 
-dataWork %>%
-  mutate(target = as.factor(as.numeric(as.character(target)))) %>%
-  select(c("target", "funded_loan_date")) %>%
-  group_by(funded_loan_date, target) %>%
-  summarise( N = n()) %>%
-  ggplot(aes(x = funded_loan_date, y = N, fill=target)) +
-  geom_bar(stat = 'identity', position= position_dodge())+
-  ylab("Number of observations")+
-  labs(title = "Target in all data")+
-  theme(plot.title = element_text(hjust = 0.5))
 
+attributesOfVariables <- list()
 
-defaultRates <- dataWork %>%
-  mutate(target = as.numeric(as.character(target))) %>%
-  select(c("target", "funded_loan_date")) %>%
-  group_by(funded_loan_date, target) %>%
-  summarise(N = n()) %>%
-  melt(id = c("funded_loan_date", "target")) %>%
-  cast(funded_loan_date ~ target)
+for (var in names(dataTrain)) {
+  if(is.factor(dataTrain[[var]])) {
+    attributesOfVariables[[var]] <- table(dataTrain[[var]])
+  } else {
+    attributesOfVariables[[var]] <- summary(dataTrain[[var]])
+    }
+}
 
-names(defaultRates)[c(2,3)] <- c("goods", "bads")
-defaultRates<- defaultRates %>%
-  mutate(goods = ifelse(is.na(goods), 0, goods),
-         bads = ifelse(is.na(bads), 0, bads),
-         badRate = bads/goods,
-         N = goods+bads)
+# in all samples (train, test, vaid, out of time) the attributes: NONE, OTHER, ANY have got a very small percentage so I decide to remove it from all data
+dataTrain <- dataTrain %>% filter(!home_ownership %in% c('ANY', 'NONE', 'OTHER'))
+dataTrain$home_ownership <- factor(dataTrain$home_ownership, levels = sort(unique(dataTrain$home_ownership)))
 
-ggplot(defaultRates, aes(x = funded_loan_date, y = badRate))+
-  geom_line() +
-  labs(title = "Bad rate in all data")+
-  theme(plot.title = element_text(hjust = 0.5))
-
-defaultRates %>% filter(N > 1500 & bads >= 500) %>%
-  ggplot( aes(x = funded_loan_date, y = badRate))+
-  geom_line() +
-  labs(title    = "Bad rate - selected data",
-       subtitle = paste("Number of observations in each month is greater than 1500",  "and the number defaults greater than 500"))+
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle=element_text(size = 9))
-
-
-dateStartToModeling <- '2012-05-01'
-dateEndToModeling   <- '2015-07-01' 
+dataTrain <- dataTrain %>% mutate(purpose = ifelse(purpose %in% c('educational', 'renewable_energy'),'other', as.character(purpose)))
+dataTrain$purpose <- factor(dataTrain$purpose, levels = sort(unique(dataTrain$purpose)))
   
-dataWork %>%
-  mutate(target = as.factor(as.numeric(as.character(target)))) %>%
-  select(c("target", "funded_loan_date")) %>%
-  filter(funded_loan_date >= dateStartToModeling & funded_loan_date <= dateEndToModeling) %>%
-  group_by(funded_loan_date, target) %>%
-  summarise( N = n()) %>%
-  ggplot(aes(x = funded_loan_date, y = N, fill=target)) +
-  geom_bar(stat = 'identity', position= position_dodge())+
-  ylab("Number of observations")+
-  labs(title = "Target in selected data")+
-  theme(plot.title = element_text(hjust = 0.5))
+dataTrain$emp_length <- ifelse(as.character(dataTrain$emp_length) == 'n/a', 'LACK', as.character(dataTrain$emp_length))
+dataTrain$emp_length <- factor(dataTrain$emp_length, levels = sort(unique(dataTrain$emp_length)))
+
 
 
