@@ -36,10 +36,10 @@ dataTrain$emp_length <- factor(dataTrain$emp_length, levels = sort(unique(dataTr
 
 variablesWithNA <- c()
 
-for (i in seq_along(attributesOfVariables)) {
-  if(sum(grepl(pattern = "NA", x = names(attributesOfVariables[[i]]))) > 0) {
-    nameVariable    <- names(attributesOfVariables[i])
-    variablesWithNA <- c(nameVariable, variablesWithNA)
+for (i in names(dataTrain)) {
+  if(sum(is.na(dataTrain[i])) > 0) {
+    print(i)
+    variablesWithNA <- c(i, variablesWithNA)
   }
-}
-
+}  
+  
