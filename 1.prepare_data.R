@@ -48,3 +48,8 @@ dataWork <- changeCharacter2FactorVariableWithLackGroup(dataWork)
 variablesWithLargeCategories <- findLargeCategories(data = dataWork[,which(names(dataWork) != "target")], minLevelOfLargeCategoryInAll = 0.9)
 dataWork <- dataWork %>% select(-c(variablesWithLargeCategories) )
 
+
+save(dataWork, file = file.path(dataPath, "dataWork.RData"))
+
+
+
