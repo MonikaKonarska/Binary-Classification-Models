@@ -3,7 +3,7 @@ library(reshape)
 library(ggplot2)
 library(lubridate)
 
-set.seed(1234)
+set.seed(2234)
 dataPath <- file.path(getwd(), "data")
 load(file.path(dataPath, "dataWork.RData"))
 
@@ -78,8 +78,7 @@ dataToTranTestValid <- dataWork %>%
   filter(funded_loan_date >= modelingTimeInterval$minDate & funded_loan_date <= modelingTimeInterval$minDate %m+% years(2))
 
 dataToOutOfTime <- dataWork %>%
-  filter(funded_loan_date > modelingTimeInterval$minDate %m+% years(2) & funded_loan_date <= modelingTimeInterval$maxDate) %>%
-  summarise(n())
+  filter(funded_loan_date > modelingTimeInterval$minDate %m+% years(2) & funded_loan_date <= modelingTimeInterval$maxDate) 
 
 
 dataToTranTestValid$group <- sample(c('train', 'test', 'valid'), size = nrow(dataToTranTestValid), prob = c(divTrain, divTest,  divValid), replace = TRUE)
