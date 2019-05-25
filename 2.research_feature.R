@@ -1,7 +1,9 @@
 library(tidyverse)
 library(reshape2)
-library(ggplot2)
 library(lubridate)
+library(scales)
+
+source("functions.R")
 
 dataPath <- file.path(getwd(), "data")
 load(file.path(dataPath, "dataToModeling.Rdata"))
@@ -11,6 +13,7 @@ dataTrain <- dataTrain %>% filter(funded_loan_date >= '2013-01-01')
 dataTrain$month <- substr(dataTrain$funded_loan_date, start = 1, stop = 7)
 dataTrain$month <- factor(dataTrain$month, levels = sort(unique(dataTrain$month)))
 
+dataTrain <- dataTrain %>% select(-c("mths_since_last_record", "mths_since_last_major_derog", "mths_since_last_delinq"))
 
 
 attributesOfVariables <- list()
@@ -39,7 +42,27 @@ variablesWithNA <- c()
 for (i in names(dataTrain)) {
   if(sum(is.na(dataTrain[i])) > 0) {
     print(i)
+    dataTrain       <- dataTrain[!is.na(dataTrain[[i]]), ]
     variablesWithNA <- c(i, variablesWithNA)
   }
 }  
-  
+
+
+##  Exploratory Data Analysis
+numericVariables <- select_if(dataTrain, is.numeric) %>% names()
+categoricalVariables <- select_if(dataTrain, is.factor) %>% names()
+
+
+# plots of numerical variables 
+dataTrain %>%
+  select_(.dots = numericVariables) %>%
+  gather_("variable", "value", gather_cols = numericVariables) %>%
+  ggplot(aes(x = value)) +
+  facet_wrap(~ variable, scales = "free_x", ncol = 3) +
+  geom_histogram()
+
+
+densityPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "density", groupBy = "month"))
+boxplotPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "boxplot", groupBy = "month"))
+histogramPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "histogram", groupBy = "month"))
+
