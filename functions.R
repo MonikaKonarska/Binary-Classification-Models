@@ -152,7 +152,43 @@ findLargeCategories <- function(data, minLevelOfLargeCategoryInAll = 0.85, searc
 
 
 
-
+createPlotsForContinousVariables <- function(variable_name = "",
+                                             data = "",
+                                             type_of_plots = c("density", "histogram", "boxplot"),
+                                             groupBy = NULL) {
+  
+  type_of_plots <- match.arg(type_of_plots)
+  
+  if(is.null(groupBy)) {
+    if(type_of_plots == "density") {
+      ggplot(data = dataTrain, aes_string(variable_name))+
+        geom_density()+
+        labs(title = paste("Density of", variable_name))
+    } else if (type_of_plots == "histogram") {
+      ggplot(data, aes_string(variable_name))+
+        geom_histogram() +
+        labs(title = paste("Histogram of", variable_name))
+    } else if (type_of_plots == "boxplot") {
+      ggplot(data, aes_string(y = variable_name))+
+        geom_boxplot()+
+        labs(title = paste("Boxplot of", variable_name))
+    }
+  } else {
+    if(type_of_plots == "density"){
+      ggplot(data, aes_string(x = variable_name, y = "..density.."))+
+        geom_density(aes_string(fill = groupBy), position = "stack")+
+        labs(title = paste("Density of", variable_name, "grouping by", groupBy))
+    } else if (type_of_plots == "histogram") {
+      ggplot(data, aes_string(variable_name))+
+        geom_histogram()+
+        facet_wrap(groupBy)
+    } else if (type_of_plots == "boxplot") {
+      ggplot(data, aes_string(y = variable_name, x = groupBy))+
+        geom_boxplot()+
+        theme(axis.text.x = element_text(angle = 45))
+    }
+  }
+}  
 
 
 
