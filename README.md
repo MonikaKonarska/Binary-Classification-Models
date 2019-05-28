@@ -18,7 +18,9 @@ The purpose of this project is use posibilities of machine learning, statistics 
 - exploratory data analysis, 
 - data preparation for modeling,
 - variable selection,
-- modeling data
+- training classification models to predict bad loans,
+- testing models,
+- validation models, 
 
 
 ### Methods Used
