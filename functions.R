@@ -96,7 +96,7 @@ convert_date_from_month_year <- function(date_month_year) {
 }
 
 
-changeCharacter2FactorVariableWithLackGroup <- function(data, variable_character = NULL) {
+changeCharacter2FactorVariableWithLackGroup <- function(data, variable_character = NULL, typeOfLack = NULL) {
   # Changes the character variable to factor type. In case when the variable has NA values then function return value 'LACK' for observation
   #
   # Args:
@@ -110,12 +110,20 @@ changeCharacter2FactorVariableWithLackGroup <- function(data, variable_character
     varChar <- names(varTypeAll[grep(x = varTypeAll, pattern = "character")])
     for(zm in varChar) {
       data[,is.na(zm)] <- 'LACK'
+      
+      if(!is.null(typeOfLack)) {
+        data[which(data[[zm]] %in% typeOfLack), zm] <- 'LACK'
+      }
+      
       numberOfLevels   <- sort(unique(data[[zm]]))
       data[[zm]]       <- factor(data[[zm]], levels = numberOfLevels)
     }
   } else {
     data[[variable_character]]        <- as.character(data[[variable_character]])
     data[ ,is.na(variable_character)] <- 'LACK'
+    if(!is.null(typeOfLack)) {
+      data[which(data[[variable_character]] %in% typeOfLack), variable_character] <- 'LACK'
+    }
     numberOfLevels                    <- sort(unique(data[[variable_character]]))
     data[[variable_character]]        <- factor(data[[variable_character]], levels = numberOfLevels)
   }
