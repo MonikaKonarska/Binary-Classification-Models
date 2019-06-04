@@ -5,7 +5,6 @@ library(reshape2)
 library(reshape)
 library(scales)
 library(openxlsx)
-library(tree)
 source("functions.R")
 
 
@@ -17,7 +16,6 @@ data <- setDF(data)
 
 data$target <- factor(case_when(data$loan_status == "Fully Paid"  ~ 0,
                                 data$loan_status == "Charged Off" ~ 1,
-                                data$loan_status == "Late (31-120 days)" ~ 1,
                                 data$loan_status == "Default Does not meet the credit policy. Status:Charged Off" ~ 1), levels = c(0, 1))
 data <- data[which(!is.na(data$target)), ]
 
@@ -43,13 +41,13 @@ dataWork <- dataWork %>%
          last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) %>%
   select(-c("issue_d","earliest_cr_line", "last_credit_pull_d"))
 
-dataWork <- changeCharacter2FactorVariableWithLackGroup(dataWork)
+dataWork <- changeCharacter2FactorVariableWithLackGroup(data = dataWork,  typeOfLack = "n/a" )
 
-variablesWithLargeCategories <- findLargeCategories(data = dataWork[,which(names(dataWork) != "target")], minLevelOfLargeCategoryInAll = 0.9)
-dataWork <- dataWork %>% select(-c(variablesWithLargeCategories) )
+# find to large percent of attribute in factor variables
+factorColumns <- names(select_if(.tbl =  dataWork, is.factor))
+attributesOfVariables <- sapply(factorColumns, function(x) prop.table(table(dataWork[[x]])))
 
+variablesWithLargeAttribute <- c("verification_status_joint", "application_type", "pymnt_plan")
+dataWork <- dataWork %>% select(-one_of(variablesWithLargeAttribute))
 
 save(dataWork, file = file.path(dataPath, "dataWork.RData"))
-
-
-
