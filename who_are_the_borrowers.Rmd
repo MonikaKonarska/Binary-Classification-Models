@@ -16,9 +16,9 @@ library("data.table")
 set.seed(1234)
 ```
 
-```{r prepareData, echo = FALSE, message=FALSE, warning=FALSE}
+```{r prepareData, echo = FALSE, message = FALSE, warning = FALSE}
 
-ataPath <- file.path(getwd(), "data")
+dataPath <- file.path(getwd(), "data")
 data <- fread(file.path(dataPath, "loan.csv"))
 data <- setDF(data)
 
@@ -45,27 +45,43 @@ borrowersWithoutDefault <- sample(x = borrowersWithoutDefault, size = 30000)
 
 ##### Converting the text file into a Corpus
 
-```{r corpus, echo = TRUE, message=FALSE, warning=FALSE }
+```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
 docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
 docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
 docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
-
 ```
 
 Here the first few documents from corpus structure - docsBorrowersAll
-
-```{r exampleOfDocs, echo = TRUE, message=FALSE, warning=FALSE}
+```{r exampleOfDocs, echo = TRUE, message = FALSE, warning = FALSE}
 inspect(docsBorrowersAll)[1:10]
-
 ```
 
 
 ##### Text cleaning
+Used function `tm_map()` from the tm package for processing text. It is some operations on the text:
 
-```{r }
+* strip unnecessary white space,  
+* convert everything to lower case,  
+* remove numbers and punctuation with the removeNumbers and removePunctuation arguments.
 
+```{r cleaningText, echo = TRUE, message = FALSE, warning = FALSE}
+borrowesAll_tm <- tm_map(docsBorrowersAll, stripWhitespace)
+borrowesAll_tm <- tm_map(borrowesAll_tm, tolower)
+borrowesAll_tm <- tm_map(borrowesAll_tm, removeNumbers)
+borrowesAll_tm <- tm_map(borrowesAll_tm, removePunctuation)
+borrowesAll_tm <- tm_map(borrowesAll_tm, removeWords, stopwords('english'))
 
+docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault, stripWhitespace)
+docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, tolower)
+docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, removeNumbers)
+docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, removePunctuation)
+docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, removeWords, stopwords('english'))
 
+docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault, stripWhitespace)
+docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, tolower)
+docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeNumbers)
+docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removePunctuation)
+docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeWords, stopwords('english'))
 ```
 
 
