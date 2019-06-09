@@ -3,7 +3,7 @@ title: "Who are the borrowers ?"
 output: html_document
 ---
 
-## <span style="color:blue"> *Let's get more information about the borrowers.* </span>  
+## *Let's get more information about the borrowers.* 
 
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE }
 library("tm")
@@ -16,7 +16,8 @@ source("functions.R")
 set.seed(1234)
 ```
 
-The data (from 2013-01-01 to 2015-06-30) choose samples of information about borrower's employment. Created three datasests (sample of all borrowers, sample of borrowers who didn't pay off loan and sample of borrowers who paid off).   
+From data LC (from 2013-01-01 to 2015-06-30) selected samples of variable `empl_title`. Created three datasets (the sample of all borrowers, the sample of borrowers who didn't pay off loan and the sample of borrowers who paid off).   
+
 
 ```{r prepareData, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -42,26 +43,26 @@ borrowersWithoutDefault <- dataReduced[which(dataReduced$target == 0), "emp_titl
 borrowersWithoutDefault <- sample(x = borrowersWithoutDefault, size = 30000)  
 ```
 
+Here the some examples of employment title.
+```{r exampleOfEmps, echo = FALSE, message = FALSE, warning = FALSE}
+head(borrowesAll, 100)
+```
+
 
 ### **Word Cloud of borrowers employment** 
 
 
-##### Converting the text file into a Corpus
+### Converting the text file into a Corpus
 
 ```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
 docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
-docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
-docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
-```
-
-Here the first few documents from corpus structure - docsBorrowersAll
-```{r exampleOfDocs, echo = TRUE, message = FALSE, warning = FALSE}
-inspect(docsBorrowersAll)[1:10]
+docsBorrowersDefault <- Corpus(VectorSource(borrowersWithDefault))
+docsBorrowersWithoutDefault <- Corpus(VectorSource(borrowersWithoutDefault))
 ```
 
 
-##### Text cleaning
-Used function `tm_map()` from the tm package for processing text. It is some operations on the text:
+### Text cleaning
+Used function `tm_map()` from the `tm` package for processing text. It is some operations on the text:
 
 * strip unnecessary white space,  
 * convert everything to lower case,  
@@ -88,7 +89,7 @@ docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeW
 ```
 
 
-##### Create word clouds
+##### Creating word clouds
 
 ```{r clouds, echo = TRUE, message = FALSE, warning = FALSE}
 
@@ -106,7 +107,5 @@ wordcloud (borrowesAll_tm,
            scale=c(5,0.5),
            max.words=200,
            random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
-
 ```
-
 
