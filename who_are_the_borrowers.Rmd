@@ -12,9 +12,11 @@ library("wordcloud")
 library("RColorBrewer")
 library("tidyverse")
 library("data.table")
-
+source("functions.R")
 set.seed(1234)
 ```
+
+The data (from 2013-01-01 to 2015-06-30) choose samples of information about borrower's employment. Created three datasests (sample of all borrowers, sample of borrowers who didn't pay off loan and sample of borrowers who paid off).   
 
 ```{r prepareData, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -26,7 +28,7 @@ data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d)
                         earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
                         last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
 
-dataReduced <- data[which(data$funded_loan_date >= '2013-01-01' & data$funded_loan_date <= '2015-06-01'), ]
+dataReduced <- data[which(data$funded_loan_date >= '2013-01-01' & data$funded_loan_date <= '2015-06-30'), ]
 
 dataReduced$target <- factor(case_when(dataReduced$loan_status == "Fully Paid"  ~ 0,
                                        dataReduced$loan_status == "Charged Off" ~ 1,
