@@ -1,0 +1,72 @@
+---
+title: "Who are the borrowers ?"
+output: html_document
+---
+
+## <span style="color:blue"> *Let's get more information about the borrowers.* </span>  
+
+```{r setup, echo = FALSE, message=FALSE, warning=FALSE }
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+library("tidyverse")
+library("data.table")
+
+set.seed(1234)
+```
+
+```{r prepareData, echo = FALSE, message=FALSE, warning=FALSE}
+
+ataPath <- file.path(getwd(), "data")
+data <- fread(file.path(dataPath, "loan.csv"))
+data <- setDF(data)
+
+data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d),
+                        earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
+                        last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
+
+dataReduced <- data[which(data$funded_loan_date >= '2013-01-01' & data$funded_loan_date <= '2015-06-01'), ]
+
+dataReduced$target <- factor(case_when(dataReduced$loan_status == "Fully Paid"  ~ 0,
+                                       dataReduced$loan_status == "Charged Off" ~ 1,
+                                       dataReduced$loan_status == "Default Does not meet the credit policy. Status:Charged Off" ~ 1), levels = c(0, 1))
+
+dataReduced <- dataReduced[which(!is.na(dataReduced$target)), ]
+
+borrowesAll <- sample(x = dataReduced$emp_title, size = 50000 )
+borrowersWithDefault <- dataReduced[which(dataReduced$target == 1), "emp_title"]
+borrowersWithoutDefault <- dataReduced[which(dataReduced$target == 0), "emp_title"]  
+borrowersWithoutDefault <- sample(x = borrowersWithoutDefault, size = 30000)  
+```
+
+
+### **Word Cloud of borrowers employment** 
+
+##### Converting the text file into a Corpus
+
+```{r corpus, echo = TRUE, message=FALSE, warning=FALSE }
+docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
+docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
+docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
+
+```
+
+Here the first few documents from corpus structure - docsBorrowersAll
+
+```{r exampleOfDocs, echo = TRUE, message=FALSE, warning=FALSE}
+inspect(docsBorrowersAll)[1:10]
+
+```
+
+
+##### Text cleaning
+
+```{r }
+
+
+
+```
+
+
+
