@@ -1,10 +1,11 @@
 ---
 title: "Who are the borrowers ?"
-output: html_document
+output: md_document 
 ---
 
 ## *Let's get more information about the borrowers.* 
 
+### **Word Cloud of borrowers employment** 
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE }
 library("tm")
 library("SnowballC")
@@ -49,9 +50,6 @@ head(borrowesAll, 100)
 ```
 
 
-### **Word Cloud of borrowers employment** 
-
-
 ### Converting the text file into a Corpus
 
 ```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
@@ -89,7 +87,7 @@ docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeW
 ```
 
 
-##### Creating word clouds
+### Creating word clouds
 
 ```{r clouds, echo = TRUE, message = FALSE, warning = FALSE}
 
@@ -109,3 +107,4 @@ wordcloud (borrowesAll_tm,
            random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
 ```
 
+## Conclusions 
