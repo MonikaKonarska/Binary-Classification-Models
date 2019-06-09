@@ -1,6 +1,8 @@
 *Let's get more information about the borrowers.*
 -------------------------------------------------
 
+### **Word Cloud of borrowers employment**
+
 From data LC (from 2013-01-01 to 2015-06-30) selected samples of
 variable `empl_title`. Created three datasets (the sample of all
 borrowers, the sample of borrowers who didn't pay off loan and the
@@ -109,8 +111,6 @@ Here the some examples of employment title.
     ##  [99] "HASCO INC."                            
     ## [100] "Field Service Supervisor"
 
-### **Word Cloud of borrowers employment**
-
 ### Converting the text file into a Corpus
 
     docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
@@ -147,7 +147,7 @@ is some operations on the text:
     docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removePunctuation)
     docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeWords, stopwords('english'))
 
-##### Creating word clouds
+### Creating word clouds
 
     wordcloud (docsBorrowersWithoutDefault_tm,
                scale=c(5,0.5),
