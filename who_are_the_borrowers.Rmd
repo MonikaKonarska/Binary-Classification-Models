@@ -43,6 +43,7 @@ borrowersWithoutDefault <- sample(x = borrowersWithoutDefault, size = 30000)
 
 ### **Word Cloud of borrowers employment** 
 
+
 ##### Converting the text file into a Corpus
 
 ```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
@@ -84,5 +85,26 @@ docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeP
 docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeWords, stopwords('english'))
 ```
 
+
+##### Create word clouds
+
+```{r clouds, echo = TRUE, message = FALSE, warning = FALSE}
+
+wordcloud (docsBorrowersWithoutDefault_tm,
+           scale=c(5,0.5),
+           max.words=200,
+           random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+
+wordcloud (docsBorrowersDefault_tm,
+           scale=c(5,0.5),
+           max.words=200,
+           random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+
+wordcloud (borrowesAll_tm,
+           scale=c(5,0.5),
+           max.words=200,
+           random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+
+```
 
 
