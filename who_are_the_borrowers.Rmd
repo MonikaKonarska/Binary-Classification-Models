@@ -3,7 +3,7 @@ title: "Who are the borrowers ?"
 output: md_document 
 ---
 
-## *Let's get more information about the borrowers.* 
+## *Let's get more information about the borrowers* 
 
 ### **Word Cloud of borrowers employment** 
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE }
