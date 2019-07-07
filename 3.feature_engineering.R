@@ -10,8 +10,7 @@ load(file.path(dataPath, "dataToModeling.Rdata"))
 
 
 
-# Feature engineering / feature selection only on training data + EDA tylko z danych dataTrain !
-# a pozniej future selection - juz po eda
+# Feature engineering / feature selection only on training data, EDA analyst only from train data
  xxxTmp <- changeCharacter2FactorVariableWithLackGroup(data = dataReducedByVariables,  typeOfLack = "n/a" )
 
  xxxTmp$time_credit_history_year <- round((dataReducedByVariables$funded_loan_date- dataReducedByVariables$earliest_cr_line_date)/365, 2)
@@ -19,11 +18,6 @@ load(file.path(dataPath, "dataToModeling.Rdata"))
 
 
 # feature selection: https://machinelearningmastery.com/feature-selection-with-the-caret-r-package/
-# zamiana z character na factor
-# grupowanie zmiennych ciaglych i dyskretnych
-
-
-####################
 
 
 dataTrain$month <- substr(dataTrain$funded_loan_date, start = 1, stop = 7) # moze nie month ale busket ?
@@ -52,28 +46,9 @@ variablesWithLargeAttribute <- c("verification_status_joint", "application_type"
 dataWork <- dataWork %>% select(-one_of(variablesWithLargeAttribute))
 
 
-##  Exploratory Data Analysis
-numericVariables <- select_if(dataTrain, is.numeric) %>% names()
-categoricalVariables <- select_if(dataTrain, is.factor) %>% names()
-
-
-# plots of numerical variables 
-dataTrain %>%
-  select_(.dots = numericVariables) %>%
-  gather_("variable", "value", gather_cols = numericVariables) %>%
-  ggplot(aes(x = value)) +
-  facet_wrap(~ variable, scales = "free_x", ncol = 3) +
-  geom_histogram()
-
-
-densityPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "density", groupBy = "month"))
-boxplotPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "boxplot", groupBy = "month"))
-histogramPlots <- lapply(numericVariables, function(x) createPlotsForContinousVariables(variable_name = x, data = dataTrain, type_of_plots = "histogram", groupBy = "month"))
 
 
 
-# liczba zapytan/ kliencow w miesiacach
-# liczba deafoultow w miesiacach
 
 
 
