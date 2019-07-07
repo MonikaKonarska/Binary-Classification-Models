@@ -250,5 +250,29 @@ grid_arrange_shared_legend <- function(...,
 
 
 
+visualizeDensityVariablesGroupedByCategories <- function(data = NA,
+                                                         names_numeric_variables = NA,
+                                                         names_variable_to_group = NA,
+                                                         position = c("bottom", "right")) {
+  # Visualization density of variables on one page
+  #
+  # Args:
+  # data: data as data frame,
+  # names_numeric_variables: vector of names numeric variables,
+  # names_variable_to_group: name of grouped variable on plot
+  # position: position of main legend on page
+  
+  list_of_plots <- list()
+  
+  for(variable in names_numeric_variables) {
+    plot <- ggplot(data = data, aes_string(x = variable, fill = names_variable_to_group, color = names_variable_to_group)) +
+      geom_density(alpha = 0.3, size = 0.5) +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+    list_of_plots[[variable]] <- plot
+  }
+  all_plots <- grid_arrange_shared_legend(plotlist = list_of_plots, ncol = 5)
+  return(all_plots)
+}
 
 
