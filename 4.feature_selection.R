@@ -60,5 +60,30 @@ for (variable in prospectiveVariables) {
             subtitle = paste0("Variable: ", variable))
   
   plotsOfIvInTime[[variable]] <- plotIvInTime
-  
 }
+
+
+
+dir.create(path = file.path(getwd(), "plots"))
+folderToSavePlots <- file.path(getwd(), "plots")
+
+for(variable in names(plotsOfIvInTime)){
+  
+  path <- file.path(folderToSavePlots, paste0("Iv_in_time_", variable, ".jpg"))
+  jpeg(file = path)
+  print(plotsOfIvInTime[[variable]])
+  dev.off()
+}
+
+for(variable in names(plotsOfWoe)){
+  
+  path <- file.path(folderToSavePlots, paste0("woe_", variable, ".jpg"))
+  jpeg(file = path)
+  print(plotsOfWoe[[variable]])
+  dev.off()
+}
+
+jpeg(file = file.path(folderToSavePlots, paste0("iv_for_all_variables.jpg")))
+print(iv_for_all_variables_plot)
+dev.off()
+
