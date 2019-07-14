@@ -185,7 +185,8 @@ createPlotsForContinousVariables <- function(variable_name = "",
     } else if (type_of_plots == "boxplot") {
       plot <- ggplot(data, aes_string(y = variable_name))+
         geom_boxplot()+
-        labs(title = paste("Boxplot of", variable_name))
+        labs(title = paste("Boxplot of", variable_name))+
+        theme(axis.title = element_text(size = 6))
     }
   } else {
     if(type_of_plots == "density"){
