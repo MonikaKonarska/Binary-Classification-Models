@@ -71,5 +71,89 @@ create_plot_iv_in_time_for_each_variable <- function(data,
 
 
 
+calculate_information_value_for_variables <- function(data = NA,
+                                                      name_of_dependent_variable = NA,
+                                                      number_of_bins_for_continuous_variable = 6,
+                                                      create_plot_IV = FALSE,
+                                                      create_plots_woe = FALSE,
+                                                      create_plots_iv_in_time = FALSE,
+                                                      name_of_time_variable_to_iv = NA,
+                                                      path_to_save_plot = NA ) {
+  
+  # Function computes information value for each variables in dataset, create woe plots and iv plot in time
+  # Args:
+  # data: data frame
+  # name_of_dependent_variable: name of dependent variable - y
+  # number_of_bins_for_continuous_variable: umber of bins for continuous variable to compute information value
+  # create_plot_IV: TRUE/FALSE
+  # create_plots_woe: TRUE/FALSE
+  # create_plots_iv_in_time: TRUE/FALSE
+  # name_of_time_variable_to_iv: grouped time variable for example month, quarter, year, half year
+  
+  library(Information)
+  library(ggplot2)
+  library(dplyr)
+  library(purrr)
+  all_results              <- list()
+  information_table        <- create_infotables(data = data, y = name_of_dependent_variable, bins = number_of_bins_for_continuous_variable)
+  dataToPlotingIV          <- information_table$Summary[order(-information_table$Summary$IV), ]
+  dataToPlotingIV$Variable <- factor(dataToPlotingIV$Variable, levels = dataToPlotingIV$Variable[order(-dataToPlotingIV$IV)])
+  
+  iv_for_all_variables_plot <- ggplot(dataToPlotingIV, aes(x = Variable, y = IV)) +
+    geom_bar(width = 0.35, stat ='identity', color = 'darkblue', fill = 'white') +
+    ggtitle('Information Value') +
+    theme_bw() +
+    theme(plot.title = element_text(size = 10)) +
+    theme(axis.text.x = element_text(angle = 90))
+  
+  all_results[['iv_for_all_variables_plot']] <- iv_for_all_variables_plot
+  all_results[['information_table']]         <- information_table
+  
+  if(!is.na(path_to_save_plot)) {
+    jpeg(file = file.path(path_to_save_plot, paste0("iv_for_all_variables.jpg")))
+    print(iv_for_all_variables_plot)
+    dev.off()
+  }
+  
+  prospectiveVariables <- names(information_table$Tables)
+  
+  if(create_plots_woe) {
+    plotsOfWoe <- create_plot_woe_for_each_variable(prospectiveVariables, information_table)
+  }
+  
+  if(!is.na(name_of_time_variable_to_iv) & create_plots_iv_in_time == TRUE) { 
+    list_of_values_time_variable <- as.character(levels(data[[name_of_time_variable_to_iv]]))
+    plotsOfIvInTime <- create_plot_iv_in_time_for_each_variable(data,
+                                                                prospectiveVariables,
+                                                                name_of_dependent_variable,
+                                                                name_of_time_variable_to_iv,
+                                                                list_of_values_time_variable,
+                                                                number_of_bins_for_continuous_variable)
+  }
+  
+  if(!is.na(path_to_save_plot)) {
+    if(exists("plotsOfWoe")) {
+      all_results[["plotsOfWoe"]]<- plotsOfWoe
+      for(variable in names(plotsOfWoe)) {
+        path <- file.path(path_to_save_plot, paste0("woe_", variable, ".jpg"))
+        jpeg(file = path)
+        print(plotsOfWoe[[variable]])
+        dev.off()
+      }
+    }
+    
+    if(exists("plotsOfIvInTime")) {
+      all_results[["plotsOfIvInTime"]] <- plotsOfIvInTime
+      for(variable in names(plotsOfIvInTime)){
+        path <- file.path(path_to_save_plot, paste0("Iv_in_time_", variable, ".jpg"))
+        jpeg(file = path)
+        print(plotsOfIvInTime[[variable]])
+        dev.off()
+      }
+    }
+  }
+  return(all_results)
+}    
+
 
 
