@@ -1,10 +1,5 @@
 library(tidyverse)
 library(reshape2)
-library(lubridate)
-library(scales)
-library(corrplot)
-library(Information)
-
 source("functions.R")
 source("1.data_cleaning.R")
 
@@ -25,10 +20,10 @@ dataTrainWithNewFeatures <- dataTrain %>%
                                             TRUE ~1), levels = c(0,1)),
          month = substr(x = funded_loan_date, start = 1, stop = 7),
          month = factor(month, levels = sort(unique(month))),
-         quarter = as.yearqtr(dataTrain$funded_loan_date)) %>%
-  select(-c(funded_loan_date, earliest_cr_line_date, last_credit_pull_date))
-         #quarter = factor(as.character(quarter), levels = sort(unique(quarter)))
-        
+         number_of_quarter = lubridate::quarter(funded_loan_date),
+         year_of_funded_loan = lubridate::year(funded_loan_date),
+         quarter = paste(year_of_funded_loan, "Q", number_of_quarter, sep = "")) %>%
+  select(-c(funded_loan_date, earliest_cr_line_date, last_credit_pull_date, number_of_quarter, year_of_funded_loan))
 
 dataTrainWithNewFeatures <- changeCharacter2FactorVariableWithLackGroup(data = dataTrainWithNewFeatures,
                                                                         typeOfLack = "n/a" )
