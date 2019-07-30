@@ -36,7 +36,6 @@ calculate_information_value_for_variables <- function(data = NA,
   if(create_plots_woe) {
     plotsOfWoe <- create_plot_woe_for_each_variable(prospectiveVariables, information_table)
   }
-  
   if(!is.na(name_of_time_variable_to_iv) & create_plots_iv_in_time == TRUE) { 
     list_of_values_time_variable <- as.character(levels(data[[name_of_time_variable_to_iv]]))
     plotsOfIvInTime <- create_plot_iv_in_time_for_each_variable(data,
@@ -103,7 +102,6 @@ create_plot_woe_for_each_variable <- function(prospectiveVariables, information_
     tableWithWoes <- information_table$Tables[[variable]]
     tableWithWoes[[variable]] <- factor(tableWithWoes[[variable]], levels = tableWithWoes[[variable]])
     IValue <- information_table$Summary[which(information_table$Summary$Variable == variable), "IV"]
-    
     woe_plot <-  ggplot(tableWithWoes,  aes_string(x = variable, y = 'WOE'))+
       geom_bar(stat = 'identity', fill = "darkblue")+
       theme(axis.text.x = element_text(angle = 90))+
@@ -140,7 +138,7 @@ create_plot_iv_in_time_for_each_variable <- function(data,
         select_(name_of_time_variable_to_iv, variable, name_of_dependent_variable) %>%
         filter(!!sym(name_of_time_variable_to_iv) == idx_time) %>%
         select(-c(name_of_time_variable_to_iv))
-      
+    
       informationTableForVariable <- create_infotables(dataToPlot, y = name_of_dependent_variable, bins = number_of_bins_for_continuous_variable)
       tablesOfWoeInTimeByEachVariable[which(tablesOfWoeInTimeByEachVariable[['time']] == idx_time), variable] <- informationTableForVariable$Summary$IV
     }
