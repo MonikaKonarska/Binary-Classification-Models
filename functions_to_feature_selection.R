@@ -33,6 +33,7 @@ calculate_information_value_for_variables <- function(data = NA,
     save_plot_jpg(path = path_to_save_plot, plot = iv_for_all_variables_plot, prefix_text_plot_name_file = "iv_for_all_variables")
   }
   prospectiveVariables <- names(information_table$Tables)
+  prospectiveVariables <- prospectiveVariables[which(!prospectiveVariables %in% name_of_time_variable_to_iv)]
   if(create_plots_woe) {
     plotsOfWoe <- create_plot_woe_for_each_variable(prospectiveVariables, information_table)
   }
@@ -45,20 +46,20 @@ calculate_information_value_for_variables <- function(data = NA,
                                                                 list_of_values_time_variable,
                                                                 number_of_bins_for_continuous_variable)
   }
+  if(exists("plotsOfWoe")) {
+    all_results[["plotsOfWoe"]]<- plotsOfWoe
+  }
+  if(exists("plotsOfIvInTime")) {
+    all_results[["plotsOfIvInTime"]] <- plotsOfIvInTime
+  }
   
   if(!is.na(path_to_save_plot)) {
-    if(exists("plotsOfWoe")) {
-      all_results[["plotsOfWoe"]]<- plotsOfWoe
-      for(variable in names(plotsOfWoe)) {
-        save_plot_jpg(path = path_to_save_plot, plot = variable, prefix_text_plot_name_file = "woe_")
-      }
+    for(variable in names(plotsOfWoe)) {
+      save_plot_jpg(path = path_to_save_plot, plot = variable, prefix_text_plot_name_file = "woe_")
     }
-    if(exists("plotsOfIvInTime")) {
-      all_results[["plotsOfIvInTime"]] <- plotsOfIvInTime
-      for(variable in names(plotsOfIvInTime)){
-        save_plot_jpg(path = path_to_save_plot, prefix_text_plot_name_file = "Iv_in_time_", plot = variable)
+    for(variable in names(plotsOfIvInTime)) {
+      save_plot_jpg(path = path_to_save_plot, prefix_text_plot_name_file = "Iv_in_time_", plot = variable)
       }
-    }
   }
   return(all_results)
 }    
@@ -134,6 +135,8 @@ create_plot_iv_in_time_for_each_variable <- function(data,
   
   for (variable in prospectiveVariables) {
     for (idx_time in list_of_values_time_variable) {
+      print(variable)
+      print(idx_time)
       dataToPlot <- data %>%
         select_(name_of_time_variable_to_iv, variable, name_of_dependent_variable) %>%
         filter(!!sym(name_of_time_variable_to_iv) == idx_time) %>%
@@ -154,4 +157,34 @@ create_plot_iv_in_time_for_each_variable <- function(data,
   results <- list(plotsOfIvInTime, tablesOfWoeInTimeByEachVariable)
   return(results)
 }
+
+
+calculate_iv_for_variable_with_different_number_bins <- function(data = dataTrainWithNewFeatures,
+                                                                 numeric_variables,
+                                                                 max_number_bins = 7,
+                                                                 save_results = NA) {
+  # Function computes information value for continuous variable with different number of bins
+  # Args:
+  # data: data frame object with target variable 
+  # numeric_variables: one or more names of variables
+  # max_number_bins: max number of bins in variable
+  # save_results: 
+  if(max_number_bins <= 2){stop("Max number of bins is required greater than 2")}
+  
+  iv_in_variable_bins <- data.frame(variable_name = NA, number_of_bins = NA, iv = NA, stringsAsFactors = FALSE)
+  for(variable in numeric_variables) {
+    for(i in 2:max_number_bins) {
+      data_with_variable <- data[, c(variable, "target")]
+      iv <- create_infotables(data_with_variable, y = 'target', bins = i)
+      table <- data.frame('variable_name' = variable, 'number_of_bins' = i, 'iv' = iv$Summary$IV)
+      iv_in_variable_bins <- bind_rows(iv_in_variable_bins, table)
+    }
+  }
+  if(!is.na(save_results)){
+    save(iv_in_variable_bins, file = file.path(save_results, "iv_in_variable_bins.RData"))
+  }
+  return(iv_in_variable_bins)
+}
+
+
 
