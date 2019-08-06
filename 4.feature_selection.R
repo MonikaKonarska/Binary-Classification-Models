@@ -4,7 +4,10 @@ source("3.feature_engineering.R")
 source("functions_to_feature_selection.R")
 
 dir.create(file.path(getwd(), "plots"), showWarnings = FALSE)
+dir.create(file.path(getwd(), "calculations"), showWarnings = FALSE)
+
 folderToSavePlots               <- file.path(getwd(), "plots")
+folderToSavecalculations        <- file.path(getwd(), "results")
 dataTrainWithNewFeatures$target <- as.numeric(as.character(dataTrainWithNewFeatures$target))
 
 results <- calculate_information_value_for_variables(data = dataTrainWithNewFeatures,
