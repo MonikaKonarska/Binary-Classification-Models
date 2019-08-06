@@ -187,4 +187,26 @@ calculate_iv_for_variable_with_different_number_bins <- function(data = dataTrai
 }
 
 
-
+create_plots_iv_depends_of_number_bins <- function(iv_in_variable_bins) {
+  
+  max_and_min_iv_variables <- iv_in_variable_bins %>%
+    group_by(variable_name) %>% 
+    summarise(maxIv = max(iv),
+              minIv = min(iv)) %>%
+    mutate(diffrence_iv = round(maxIv - minIv, 4)) %>% 
+    filter(diffrence_iv > 0) %>%
+    arrange(desc(diffrence_iv)) 
+  
+  plots_of_iv_and_bins <- list()
+  for(variable in max_and_min_iv_variables[['variable_name']]) {
+    plot <- iv_in_variable_bins %>%
+      filter(variable_name == variable) %>%
+      ggplot(aes(x = i, y=iv))+
+      geom_point(size = 4, color = "red") +
+      xlab("Number of bins")+
+      ggtitle(label = "Information value in different number of bins", subtitle = paste("Variable: ", variable, sep = ""))+
+      theme_light()
+    plots_of_iv_and_bins[[variable]] <- plot
+  }
+  return(plots_of_iv_and_bins)
+}
