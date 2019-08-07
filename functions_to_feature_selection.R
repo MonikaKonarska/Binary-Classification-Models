@@ -168,11 +168,12 @@ calculate_iv_for_variable_with_different_number_bins <- function(data = dataTrai
   # data: data frame object with target variable 
   # numeric_variables: one or more names of variables
   # max_number_bins: max number of bins in variable
-  # save_results: 
+  # save_results_path: 
   if(max_number_bins <= 2){stop("Max number of bins is required greater than 2")}
   
   iv_in_variable_bins <- data.frame(variable_name = NA, number_of_bins = NA, iv = NA, stringsAsFactors = FALSE)
   for(variable in numeric_variables) {
+    print(variable)
     for(i in 2:max_number_bins) {
       data_with_variable <- data[, c(variable, "target")]
       iv <- create_infotables(data_with_variable, y = 'target', bins = i)
@@ -181,7 +182,7 @@ calculate_iv_for_variable_with_different_number_bins <- function(data = dataTrai
     }
   }
   if(!is.na(save_results)){
-    save(iv_in_variable_bins, file = file.path(save_results, "iv_in_variable_bins.RData"))
+    save(iv_in_variable_bins, file = file.path(save_results_path, "iv_in_variable_bins.RData"))
   }
   return(iv_in_variable_bins)
 }
