@@ -14,6 +14,8 @@ featurEngineering <- function() {
            inq_last_6mths_cat = factor(case_when(inq_last_6mths == 0 ~ "0",
                                                  inq_last_6mths == 1 ~ "1",
                                                  inq_last_6mths >= 2 ~ "2+"), levels = c("0", "1", "2+")),
+           if_inq_last_6mths_cat = factor(case_when(inq_last_6mths == 0 ~ "0",
+                                                   inq_last_6mths >= 1 ~ "2+"), levels = c("0", "2+")),
            mths_since_last_delinq_binary = factor(case_when(mths_since_last_delinq >= 1 ~ 1,
                                                             TRUE ~ 0), levels = c(0,1)),
            pub_rec_value_binary = factor(case_when(pub_rec == 0 ~ 0,
@@ -29,3 +31,9 @@ featurEngineering <- function() {
                                                                           typeOfLack = "n/a")
   return(dataTrainWithNewFeatures)
 }
+
+
+# kategoryzacja zmiennej przez random forest, svm, 
+
+
+
