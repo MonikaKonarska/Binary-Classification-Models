@@ -204,8 +204,8 @@ create_plots_iv_depends_of_number_bins <- function(iv_in_variable_bins) {
   
   max_and_min_iv_variables <- iv_in_variable_bins %>%
     group_by(variable_name) %>% 
-    summarise(maxIv = max(iv),
-              minIv = min(iv)) %>%
+   dplyr:: summarise(maxIv = max(iv, na.rm = TRUE),
+              minIv = min(iv, na.rm = TRUE)) %>%
     mutate(diffrence_iv = round(maxIv - minIv, 4)) %>% 
     filter(diffrence_iv > 0) %>%
     arrange(desc(diffrence_iv)) 
