@@ -7,7 +7,13 @@ source("functions.R")
 
 chooseTimeSeriesToModeling <- function() {
   
-  listOfPlotsTimeSeries <- list()
+  folderToSavePlots               <<- file.path(getwd(), "plots")
+  folderToSavecalculations        <<- file.path(getwd(), "calculations")
+  listOfPlotsTimeSeries           <- list()
+  dir.create(folderToSavePlots, showWarnings = FALSE)
+  dir.create(folderToSavecalculations, showWarnings = FALSE)
+
+  
   data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d),
                           earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
                           last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
@@ -21,7 +27,7 @@ chooseTimeSeriesToModeling <- function() {
   plotTargetInAllData <- data %>%
     select(c("target", "funded_loan_date")) %>%
     group_by(funded_loan_date, target) %>%
-    summarise( N = n()) %>%
+   dplyr::summarise( N = n()) %>%
     ggplot(aes(x = funded_loan_date, y = N, fill=target)) +
     geom_bar(stat = 'identity', position= position_dodge())+
     ylab("Number of observations") +
@@ -32,7 +38,7 @@ chooseTimeSeriesToModeling <- function() {
   defaultRates <- data %>%
     select(c("target", "funded_loan_date")) %>%
     group_by(funded_loan_date, target) %>%
-    summarise(N = n()) %>%
+    dplyr::summarise(N = n()) %>%
     melt(id = c("funded_loan_date", "target")) %>%
     cast(funded_loan_date ~ target)
   
@@ -54,7 +60,7 @@ chooseTimeSeriesToModeling <- function() {
   modelingTimeInterval <- defaultRates %>%
     filter(N > numberOfMinObsInMonth & bads >= numberOfMinDefaultsInMonth) %>%
     select(funded_loan_date) %>%
-    summarise(minDate = min(funded_loan_date),
+   dplyr::summarise(minDate = min(funded_loan_date),
               maxDate = max(funded_loan_date))
   
   plotBadRateInAllData <- ggplot(defaultRates, aes(x = funded_loan_date, y = badRate))+
@@ -78,7 +84,7 @@ chooseTimeSeriesToModeling <- function() {
     select(c("target", "funded_loan_date")) %>%
     filter(funded_loan_date >= modelingTimeInterval$minDate & funded_loan_date <= modelingTimeInterval$maxDate) %>%
     group_by(funded_loan_date, target) %>%
-    summarise( N = n()) %>%
+    dplyr::summarise( N = n()) %>%
     ggplot(aes(x = funded_loan_date, y = N, fill = target)) +
     geom_bar(stat = 'identity', position = position_dodge())+
     ylab("Number of observations")+
@@ -97,5 +103,6 @@ chooseTimeSeriesToModeling <- function() {
   
   save(dataToTranTestValid, file = file.path(dataPath, "dataToTranTestValid.Rdata"))
   save(dataToOutOfTime, file = file.path(dataPath, "dataToOutOfTime.Rdata"))
+  save(listOfPlotsTimeSeries, file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
   return(listOfPlotsTimeSeries)
 }
