@@ -3,7 +3,7 @@ library(reshape)
 library(lubridate)
 library(openxlsx)
 source("functions.R")
-
+source("functions_to_feature_selection.R")
 
 chooseTimeSeriesToModeling <- function() {
   
@@ -33,7 +33,9 @@ chooseTimeSeriesToModeling <- function() {
     ylab("Number of observations") +
     labs(title = "Target in all data") +
     theme(plot.title = element_text(hjust = 0.5))
+  
   listOfPlotsTimeSeries[["plotTargetInAllData"]] <- plotTargetInAllData
+  save_plot_jpg(path = folderToSavePlots, plot = plotTargetInAllData, nameOfPlot = "plotTargetInAllData")
   
   defaultRates <- data %>%
     select(c("target", "funded_loan_date")) %>%
@@ -67,7 +69,9 @@ chooseTimeSeriesToModeling <- function() {
     geom_line() +
     labs(title = "Bad rate in all data")+
     theme(plot.title = element_text(hjust = 0.5))
+  
   listOfPlotsTimeSeries[["plotBadRateInAllData"]] <- plotBadRateInAllData
+  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateInAllData, nameOfPlot = "plotBadRateInAllData")
     
   plotBadRateSelectedData <- defaultRates %>% 
     filter(N > numberOfMinObsInMonth & bads >= numberOfMinDefaultsInMonth) %>%
@@ -79,6 +83,8 @@ chooseTimeSeriesToModeling <- function() {
           plot.subtitle = element_text(size = 9))
   
   listOfPlotsTimeSeries[["plotBadRateSelectedData"]] <- plotBadRateSelectedData
+  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateSelectedData, nameOfPlot = "plotBadRateSelectedData")
+  
   
   plotTargetInSelectedData <- data %>%
     select(c("target", "funded_loan_date")) %>%
@@ -90,7 +96,9 @@ chooseTimeSeriesToModeling <- function() {
     ylab("Number of observations")+
     labs(title = "Target in selected data")+
     theme(plot.title = element_text(hjust = 0.5))
+  
   listOfPlotsTimeSeries[["plotTargetInSelectedData"]] <- plotTargetInSelectedData
+  save_plot_jpg(path = folderToSavePlots, plot = plotTargetInSelectedData, nameOfPlot = "plotTargetInSelectedData")
   
   modelingTimeInterval$minDateUpdate <- as.Date('2013-01-01')
   modelingTimeInterval$maxDateUpdate <- as.Date('2015-06-01')
@@ -104,5 +112,6 @@ chooseTimeSeriesToModeling <- function() {
   save(dataToTranTestValid, file = file.path(dataPath, "dataToTranTestValid.Rdata"))
   save(dataToOutOfTime, file = file.path(dataPath, "dataToOutOfTime.Rdata"))
   save(listOfPlotsTimeSeries, file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
+  
   return(listOfPlotsTimeSeries)
 }
