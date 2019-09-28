@@ -13,7 +13,6 @@ chooseTimeSeriesToModeling <- function() {
   dir.create(folderToSavePlots, showWarnings = FALSE)
   dir.create(folderToSavecalculations, showWarnings = FALSE)
 
-  
   data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d),
                           earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
                           last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
