@@ -5,6 +5,7 @@ samplingTrainTestValid <- function() {
   
   dataToTranTestValid_cleaned$group <- sample(c("train", "test", "valid"),
                                               size = nrow(dataToTranTestValid_cleaned),
+                                              replace = TRUE,
                                               prob = c(0.6, 0.2, 0.2))
   
   dataTrain  <- dataToTranTestValid_cleaned %>% filter(group == "train")
