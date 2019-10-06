@@ -43,3 +43,19 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 
+plotBoxPlotWithVariableAndTarget <- function(data,
+                                             variable,
+                                             targetVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, groupedVariable
+  # variable: name of continuous variable, name the same as in data frame
+  # targetVariable:
+  titleToplotBoxplot <- paste0("Boxplot of ", variable)
+  subtitleToplotBox  <- paste0("")
+  
+  plotBoxplot <- ggplot(data = data, aes_string(x = targetVariable, y = variable, fill = targetVariable))+
+    geom_boxplot(outlier.colour = "red", outlier.shape = 16) +
+    theme(axis.text.x=element_text(angle = 90, hjust = 0),
+          legend.position = "none")+
+    labs(title = titleToplotBoxplot, subtitle = subtitleToplotBox)
+  return(plotBoxplot)
+} 
