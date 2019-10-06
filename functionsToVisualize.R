@@ -89,3 +89,49 @@ plotLinePlotWithMeanVariableAndTarget <- function(data,
     labs(title = titleOfPlot, caption = paste0("Percent of NA: ", percentOfNA))
   return(plotLineMeanValueOfVariableInTime)
 }  
+
+
+createVariableWithQuantiles <- function(variable, breakToDivideVectorOfProb = 0.25) {
+  #Args:
+  #variable: numeric vector of variable
+  #breakToDivideVectorOfProb
+  breaksQuantileInVariable <- seq(0, 1- breakToDivideVectorOfProb, by = breakToDivideVectorOfProb)
+  variableWithQuantiles <- cut(variable, 
+                               breaks = c(quantile(variable, probs = seq(0, 1, by = breakToDivideVectorOfProb))),
+                               na.rm = TRUE,
+                               names = TRUE,
+                               include.lowest = TRUE,
+                               right = TRUE,
+                               labels = purrr::map_chr(breaksQuantileInVariable,
+                                                       function(x) sprintf("%s-%s", x, x + breakToDivideVectorOfProb)))
+  return(variableWithQuantiles)
+}
+
+
+plotTargetRateInQuantileVariable <- function(data,
+                                             variable,
+                                             targetVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  # targetVariable: 'target' columns
+  variableNameCol      <- paste(variable, "quantile" , sep = "_")
+  variableNameColquo   <- quo_name(variableNameCol) 
+  variableNameColenquo <- enquo(variableNameCol)
+  newValuesOfVariable  <- createVariableWithQuantiles(data[[variable]])
+  
+  data <- data %>% mutate(!!variableNameColquo := newValuesOfVariable)
+  
+  plotBarWithTargetRate <- data %>%
+    dplyr::group_by(!!sym(variableNameCol)) %>%
+    dplyr::summarise(sumOfTarget = sum(as.numeric(as.character(target))),
+                     sumOfCustomers = n()) %>%
+    mutate(rateTarget = sumOfTarget/sumOfCustomers) %>%
+    ggplot(aes_string(x = variableNameCol, y = "rateTarget"))+
+    geom_bar(stat= 'identity', fill ="brown2", color = "black")+
+    scale_y_continuous(labels = scales::percent)+
+    theme(axis.text.x=element_text(angle = 90, hjust = 0),
+          panel.border = element_rect(linetype = "dashed", fill = NA))+
+    geom_text(aes(label = scales::percent(round(rateTarget, 2)), y = rateTarget), position = position_stack(vjust = 0.5))+
+    labs(title = "Target rate", subtitle = paste("variable: ", variableNameCol))
+  return(plotBarWithTargetRate)
+}
