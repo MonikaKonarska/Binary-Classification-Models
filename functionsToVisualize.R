@@ -59,3 +59,33 @@ plotBoxPlotWithVariableAndTarget <- function(data,
     labs(title = titleToplotBoxplot, subtitle = subtitleToplotBox)
   return(plotBoxplot)
 } 
+
+
+plotLinePlotWithMeanVariableAndTarget <- function(data,
+                                                  variable,
+                                                  targetVariable,
+                                                  timeVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  # targetVariable:
+  # timeVariable:
+  
+  data           <- data[!is.na(data[, variable]), ]
+  titleOfPlot    <- paste0("Mean of ", variable, " in ", timeVariable)
+  varString      <- enquos(variable)
+  numberOfNARows <-  sum(is.na(data[[variable]])) 
+  numberRows     <-  nrow(data)                       
+  percentOfNA    <- percent(round(numberOfNARows/numberRows, 2))
+  
+  plotLineMeanValueOfVariableInTime <- data %>% 
+    group_by_(.dots = c(targetVariable, timeVariable)) %>%
+    dplyr::summarise_at(dplyr::vars(!!!varString), mean) %>% 
+    ggplot(aes_string(x = timeVariable, y = variable, colour = targetVariable))+
+    geom_line(aes_string(group = targetVariable))+
+    scale_size_manual(values=c(2, 2))+
+    theme(panel.grid.minor = element_blank(),
+          panel.background = element_rect(colour = "black", size=0.5),
+          axis.text.x=element_text(angle = 90, hjust = 0))+
+    labs(title = titleOfPlot, caption = paste0("Percent of NA: ", percentOfNA))
+  return(plotLineMeanValueOfVariableInTime)
+}  
