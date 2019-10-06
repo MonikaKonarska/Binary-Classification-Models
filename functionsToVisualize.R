@@ -164,3 +164,28 @@ plotBarsOfTargetInEachCategories <- function(data,
     scale_y_continuous(labels = function(x) format(x, big.mark = ",", scientific = FALSE), expand = c(0,0))
   return(plotBar)
 }
+
+
+plotTargetRateInEachCategories <- function(data,
+                                           variable,
+                                           targetVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  # targetVariable: factor variable with values 0 or 1
+  targetVariableEnquo <- enquo(targetVariable)
+  plotBarWithTargetRate <- data %>%
+    dplyr::group_by(!!sym(variable)) %>% 
+    dplyr::summarise(sumOfTarget = sum(as.numeric(as.character(!!sym(targetVariable)))),
+                     amountConsumer = n()) %>%
+    mutate(targetRate = sumOfTarget/amountConsumer) %>% 
+    ggplot(aes_string(x = variable, y = "targetRate")) +
+    geom_bar(stat = 'identity', fill ="brown2", color = "black")+
+    scale_y_continuous(expand = c(0,0), labels = scales::percent)+
+    theme(axis.text.x=element_text(angle = 90, hjust = 0),
+          panel.border = element_rect(linetype = "dashed", fill = NA))+
+    geom_text(aes(label = scales::percent(round(targetRate, 2)), y = targetRate),
+              position = position_stack(vjust = 0.5))+
+    labs(title = "Target rate", subtitle = paste("variable:", variable))
+  
+  return(plotBarWithTargetRate)
+}
