@@ -135,3 +135,32 @@ plotTargetRateInQuantileVariable <- function(data,
     labs(title = "Target rate", subtitle = paste("variable: ", variableNameCol))
   return(plotBarWithTargetRate)
 }
+
+
+plotBarsOfCountCategoriesInTime <- function(data,
+                                            variable,
+                                            timeVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  plotBar <- ggplot(data, aes_string(x = timeVariable, fill = variable)) +
+    geom_bar(stat = "count")+
+    theme(panel.border = element_rect(linetype = "dashed", fill = NA),
+          axis.text.x=element_text(angle = 90, hjust = 0)) +
+    scale_y_continuous(labels = function(x) format(x, big.mark = ",", scientific = FALSE), expand = c(0,0))
+  return(plotBar)
+}
+
+
+plotBarsOfTargetInEachCategories <- function(data,
+                                             variable,
+                                             targetVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  # targetVariable: factor variable with values 0 or 1
+  plotBar <- ggplot(data, aes_string(x = variable, fill = targetVariable)) +
+    geom_bar(stat = "count", position = "dodge2")+
+    theme(panel.border = element_rect(linetype = "dashed", fill = NA),
+          axis.text.x=element_text(angle = 90, hjust = 0)) +
+    scale_y_continuous(labels = function(x) format(x, big.mark = ",", scientific = FALSE), expand = c(0,0))
+  return(plotBar)
+}
