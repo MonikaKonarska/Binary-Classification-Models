@@ -189,3 +189,44 @@ plotTargetRateInEachCategories <- function(data,
   
   return(plotBarWithTargetRate)
 }
+
+
+plotTargetInTimeForEachCategory <- function(data,
+                                            variable,
+                                            targetVariable,
+                                            timeVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  plotBar <-   data %>%
+    group_by(!!sym(timeVariable), !!sym(targetVariable), !!sym(variable)) %>%
+    dplyr::summarise(n =n()) %>%
+    mutate(target01 = ifelse(target == 1, "target: 1", "target: 0"))%>%
+    ggplot(aes_string(x = timeVariable, y = "n", fill = variable)) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~ target01, nrow = 2)+
+    theme(axis.text.x=element_text(angle = 90, hjust = 0),
+          panel.border = element_rect(linetype = "dashed", fill = NA))+
+    labs(subtitle = paste("variable:", variable))
+  
+  return(plotBar)
+}
+
+
+
+plotContinuousVariableWithTarget <- function(data, variable, targetVariable, timeVariable, groupedVariable) {
+  boxplot <- plotBoxPlotWithVariableAndTarget(data, variable, targetVariable)
+  plotLine <- plotLinePlotWithMeanVariableAndTarget(data, variable, targetVariable, timeVariable)
+  plotRate <- plotTargetRateInQuantileVariable(data, variable, targetVariable)
+  multiplot(boxplot, plotLine, plotRate, cols = 2)
+}
+
+
+plotDiscreteVariableWithTarget <- function(data, variable, timeVariable) {
+  plotBarCounts       <- plotBarsOfCountCategoriesInTime(data, variable, timeVariable)
+  plotBarTarget       <- plotBarsOfTargetInEachCategories(data, variable, targetVariable)
+  plotTargetRate      <- plotTargetRateInEachCategories(data, variable, targetVariable)
+  plotBarTargetInTime <- plotTargetInTimeForEachCategory(data, variable, targetVariable, timeVariable)
+  multiplot(plotBarCounts, plotBarTarget, plotTargetRate, plotBarTargetInTime, cols = 2)
+}
+
+
