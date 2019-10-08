@@ -1,5 +1,7 @@
 library(ggplot2)
 library(dplyr)
+
+
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Multiple plot function
   # 
@@ -190,10 +192,32 @@ plotTargetRateInEachCategories <- function(data,
   return(plotBarWithTargetRate)
 }
 
+plotTargetRateInTimeForCategories <- function(data,
+                                              variable,
+                                              targetVariable,
+                                              timeVariable) {
+  # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
+  # variable: name of continuous variable, name the same as in column in data
+  # targetVariable: factor variable with values 0 or 1
+  
+  plotLineWithTargetRate <- data %>%
+    dplyr::group_by(!!sym(variable), !!sym(timeVariable)) %>% 
+    dplyr::summarise(sumOfTarget = sum(as.numeric(as.character(!!sym(targetVariable)))),
+                     amountConsumer = n()) %>%
+    mutate(targetRate = sumOfTarget/amountConsumer) %>%
+    ggplot(aes_string(x = timeVariable, y = "targetRate", group = variable, colour = variable)) +
+    geom_line(size = 1, aes(linetype =  variable))+
+    theme(axis.text.x=element_text(angle = 90, hjust = 0),
+          panel.border = element_rect(linetype = "dashed", fill = NA))+
+    scale_y_continuous(labels = scales::percent)
+  return(plotLineWithTargetRate)
+}
+
+
+
 
 plotTargetInTimeForEachCategory <- function(data,
                                             variable,
-                                            targetVariable,
                                             timeVariable) {
   # data: data frame with columns defined in parameters: variable, targetVariable, timeVariable
   # variable: name of continuous variable, name the same as in column in data
@@ -222,11 +246,55 @@ plotContinuousVariableWithTarget <- function(data, variable, targetVariable, tim
 
 
 plotDiscreteVariableWithTarget <- function(data, variable, timeVariable) {
-  plotBarCounts       <- plotBarsOfCountCategoriesInTime(data, variable, timeVariable)
-  plotBarTarget       <- plotBarsOfTargetInEachCategories(data, variable, targetVariable)
-  plotTargetRate      <- plotTargetRateInEachCategories(data, variable, targetVariable)
-  plotBarTargetInTime <- plotTargetInTimeForEachCategory(data, variable, targetVariable, timeVariable)
-  multiplot(plotBarCounts, plotBarTarget, plotTargetRate, plotBarTargetInTime, cols = 2)
+  plotBarCounts            <- plotBarsOfCountCategoriesInTime(data, variable, timeVariable)
+  plotTargetRate           <- plotTargetRateInEachCategories(data, variable, targetVariable)
+  plotLineTargetRateInTime <- plotTargetRateInTimeForCategories(data, variable, targetVariable, timeVariable)
+  multiplot(plotBarCounts, plotTargetRate, plotLineTargetRateInTime, cols = 2)
 }
 
 
+createPlotsForContinousVariables <- function(variable_name = "",
+                                             data = "",
+                                             type_of_plots = c("density", "histogram", "boxplot"),
+                                             groupBy = NULL) {
+  # Function creates plots (density or histogram, boxplot)
+  # Args:
+  # variable_name: name of continous variable 
+  # data: data frame 
+  # type_of_plots: types of plots to create
+  # groupBy: variable to grouping plots
+  
+  type_of_plots <- match.arg(type_of_plots)
+  
+  if(is.null(groupBy)) {
+    if(type_of_plots == "density") {
+      plot <- ggplot(data = dataTrain, aes_string(variable_name))+
+        geom_density()+
+        labs(title = paste("Density of", variable_name))
+    } else if (type_of_plots == "histogram") {
+      plot <- ggplot(data, aes_string(variable_name))+
+        geom_histogram() +
+        labs(title = paste("Histogram of", variable_name))
+    } else if (type_of_plots == "boxplot") {
+      plot <- ggplot(data, aes_string(y = variable_name))+
+        geom_boxplot()+
+        labs(title = paste("Boxplot of", variable_name))+
+        theme(axis.title = element_text(size = 6))
+    }
+  } else {
+    if(type_of_plots == "density"){
+      plot <- ggplot(data, aes_string(x = variable_name, y = "..density.."))+
+        geom_density(aes_string(fill = groupBy), position = "stack")+
+        labs(title = paste("Density of", variable_name, "grouping by", groupBy))
+    } else if (type_of_plots == "histogram") {
+      plot <- ggplot(data, aes_string(variable_name))+
+        geom_histogram()+
+        facet_wrap(groupBy)
+    } else if (type_of_plots == "boxplot") {
+      plot <- ggplot(data, aes_string(y = variable_name, x = groupBy))+
+        geom_boxplot()+
+        theme(axis.text.x = element_text(angle = 45))
+    }
+  }
+  return(plot)
+}  
