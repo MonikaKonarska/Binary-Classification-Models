@@ -1,0 +1,60 @@
+---
+title: "Data visualization on training sample"
+output: html_document
+---
+
+```{r readLibriaries, echo = FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(tidyverse)
+library(purrr)
+source("functionsToVisualize.R")
+source("3.feature_engineering.R")
+
+  variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
+  variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
+  
+
+dataPath <- file.path(getwd(), "data")
+dataToVisualize <- featurEngineering()
+numericVariables <- names(dataToVisualize)[map_lgl(dataToVisualize, is.numeric)] 
+factorVariables <- names(dataToVisualize)[map_lgl(dataToVisualize, is.factor)]
+
+```
+<br/>
+<br/>
+
+
+## Density plots   
+
+```{r density, echo = FALSE, message=FALSE, warning=FALSE}
+
+visualizeDensityVariablesGroupedByCategories(data = dataToVisualize,
+                                             names_numeric_variables = numericVariables,
+                                             names_variable_to_group = "target")
+
+```
+
+
+
+## Boxplots
+
+```{r bosxplots, echo = FALSE, message=FALSE, warning=FALSE, out.width = '90%', fig.align = "center"}
+
+list_of_boxplots <- list()
+for (variable in numericVariables) {
+  print(variable)
+  boxplot <- createPlotsForContinousVariables(variable_name = variable,
+                                            data = dataToVisualize,
+                                            type_of_plots = "boxplot") 
+  list_of_boxplots[[variable]] <- boxplot
+}
+
+
+cowplot::plot_grid(plotlist = list_of_boxplots)
+
+```
+
+
+
