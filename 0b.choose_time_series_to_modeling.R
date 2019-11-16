@@ -2,6 +2,7 @@ library(tidyverse)
 library(reshape)
 library(lubridate)
 library(openxlsx)
+library(cowplot)
 source("functions.R")
 source("functions_to_feature_selection.R")
 
@@ -33,10 +34,7 @@ chooseTimeSeriesToModeling <- function() {
     ylab("Number of observations") +
     labs(title = "Distribution of target") +
     theme(plot.title = element_text(hjust = 0.5))
-  
-  listOfPlotsTimeSeries[["plotTargetInAllData"]] <- plotTargetInAllData
-  save_plot_jpg(path = folderToSavePlots, plot = plotTargetInAllData, nameOfPlot = "plotTargetInAllData")
-  
+
   defaultRates <- data %>%
     select(c("target", "funded_loan_date")) %>%
     group_by(funded_loan_date, target) %>%
@@ -72,9 +70,6 @@ chooseTimeSeriesToModeling <- function() {
     scale_y_continuous(limits = c(0.15, 0.35), labels = scales::percent)+
     theme(plot.title = element_text(hjust = 0.5))
   
-  listOfPlotsTimeSeries[["plotBadRateInAllData"]] <- plotBadRateInAllData
-  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateInAllData, nameOfPlot = "plotBadRateInAllData")
-    
   minDateInDataSet <- as.Date('2012-01-01')
   maxDateInDataSet <- as.Date('2014-12-31')
   
@@ -87,9 +82,6 @@ chooseTimeSeriesToModeling <- function() {
     theme(plot.title = element_text(hjust = 0.5),
           plot.subtitle = element_text(size = 9))
   
-  listOfPlotsTimeSeries[["plotBadRateSelectedData"]] <- plotBadRateSelectedData
-  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateSelectedData, nameOfPlot = "plotBadRateSelectedData")
-  
   plotTargetInSelectedData <- data %>%
     select(c("target", "funded_loan_date")) %>%
     filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet) %>%
@@ -101,9 +93,20 @@ chooseTimeSeriesToModeling <- function() {
     labs(title = "Distribution of target - selected data")+
     theme(plot.title = element_text(hjust = 0.5))
   
+  plotTargetsInformation <<- plot_grid(plotTargetInAllData,plotTargetInSelectedData, plotBadRateInAllData, plotBadRateSelectedData, nrow = 2)  
+  
+  listOfPlotsTimeSeries[["plotBadRateSelectedData"]] <- plotBadRateSelectedData
+  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateSelectedData, nameOfPlot = "plotBadRateSelectedData")
+  listOfPlotsTimeSeries[["plotBadRateInAllData"]] <- plotBadRateInAllData
+  save_plot_jpg(path = folderToSavePlots, plot = plotBadRateInAllData, nameOfPlot = "plotBadRateInAllData")
+  listOfPlotsTimeSeries[["plotTargetInAllData"]] <- plotTargetInAllData
+  save_plot_jpg(path = folderToSavePlots, plot = plotTargetInAllData, nameOfPlot = "plotTargetInAllData")
   listOfPlotsTimeSeries[["plotTargetInSelectedData"]] <- plotTargetInSelectedData
   save_plot_jpg(path = folderToSavePlots, plot = plotTargetInSelectedData, nameOfPlot = "plotTargetInSelectedData")
     
+  listOfPlotsTimeSeries[["plotTargetInSelectedData"]] <- plotTargetInSelectedData
+  save_plot_jpg(path = folderToSavePlots, plot = plotTargetsInformation, nameOfPlot = "plotTargetsInformation")
+  
   dataToTranTestValid <- data %>%
     filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet %m-% years(1))
   
