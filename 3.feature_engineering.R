@@ -11,9 +11,14 @@ featurEngineering <- function() {
   dataTrainWithNewFeatures <- dataTrain %>%
     mutate(delinq_2yrs_binary = factor(case_when(delinq_2yrs == 0 ~ 1,
                                                  TRUE ~0), levels = c(0,1)),
+           deninq_in_last_year_cat = case_when(is.na(mths_since_last_delinq) ~ "LACK",
+                                               mths_since_last_delinq <= 12 ~ "1",
+                                               TRUE ~ "0"),
            inq_last_6mths_cat = factor(case_when(inq_last_6mths == 0 ~ "0",
                                                  inq_last_6mths == 1 ~ "1",
                                                  inq_last_6mths >= 2 ~ "2+"), levels = c("0", "1", "2+")),
+           inq_last_6mths_catMore = factor(case_when(inq_last_6mths >= 4 ~ "4+",
+                                                      TRUE ~ as.character(inq_last_6mths)), levels = c("0","1","2","3","4+")),
            if_inq_last_6mths_cat = factor(case_when(inq_last_6mths == 0 ~ "0",
                                                    inq_last_6mths >= 1 ~ "2+"), levels = c("0", "2+")),
            mths_since_last_delinq_binary = factor(case_when(mths_since_last_delinq >= 1 ~ 1,
@@ -31,9 +36,4 @@ featurEngineering <- function() {
                                                                           typeOfLack = "n/a")
   return(dataTrainWithNewFeatures)
 }
-
-
-# kategoryzacja zmiennej przez random forest, svm, 
-
-
 
