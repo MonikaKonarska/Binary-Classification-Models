@@ -33,3 +33,10 @@ The purpose of this project is use posibilities of machine learning, statistics 
 - RMarkdown
 - R Shiny
 
+
+### Results   
+
+Visualizations - training dataset: [here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/trainDataSetVisualization.html)
+
+
+
