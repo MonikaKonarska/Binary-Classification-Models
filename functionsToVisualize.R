@@ -1,6 +1,7 @@
-library(ggplot2)
-library(dplyr)
-
+# library(ggplot2)
+# library(dplyr)
+library(tidyverse)
+library(cowplot)
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Multiple plot function
@@ -245,11 +246,16 @@ plotContinuousVariableWithTarget <- function(data, variable, targetVariable, tim
 }
 
 
-plotDiscreteVariableWithTarget <- function(data, variable, timeVariable) {
+plotDiscreteVariableWithTarget <- function(data, variable, timeVariable, targetVariable) {
   plotBarCounts            <- plotBarsOfCountCategoriesInTime(data, variable, timeVariable)
   plotTargetRate           <- plotTargetRateInEachCategories(data, variable, targetVariable)
   plotLineTargetRateInTime <- plotTargetRateInTimeForCategories(data, variable, targetVariable, timeVariable)
-  multiplot(plotBarCounts, plotTargetRate, plotLineTargetRateInTime, cols = 2)
+  #multiplot(plotBarCounts, plotTargetRate, plotLineTargetRateInTime, cols = 2)
+  title_theme <- ggdraw() + draw_label(variable)
+  plotWithTheme <- plot_grid(title_theme, plotBarCounts,  nrow = 1)+theme(plot.background = element_rect(fill = "cornsilk"))
+  plots2 <- plot_grid(plotTargetRate, plotLineTargetRateInTime, nrow=1)
+ 
+  plot_grid(plotWithTheme, plots2, nrow = 2)
 }
 
 
@@ -298,3 +304,70 @@ createPlotsForContinousVariables <- function(variable_name = "",
   }
   return(plot)
 }  
+
+
+grid_arrange_shared_legend <- function(..., 
+                                       plotlist=NULL,
+                                       ncol = length(list(...)),
+                                       nrow = NULL,
+                                       position = c("bottom", "right")) {
+  # Function shares a legend between multiple plots that do not also share axes
+  # Code of function from website: https://github.com/tidyverse/ggplot2/wiki/Share-a-legend-between-two-ggplot2-graphs
+  
+  plots <- c(list(...), plotlist)
+  
+  if (is.null(nrow)) nrow = ceiling(length(plots)/ncol)
+  
+  position <- match.arg(position)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl <- c(gl, ncol = ncol, nrow = nrow)
+  
+  combined <- switch(position,
+                     "bottom" = arrangeGrob(do.call(arrangeGrob, gl),
+                                            legend,
+                                            ncol = 1,
+                                            heights = unit.c(unit(1, "npc") - lheight, lheight)),
+                     "right" = arrangeGrob(do.call(arrangeGrob, gl),
+                                           legend,
+                                           ncol = 2,
+                                           widths = unit.c(unit(1, "npc") - lwidth, lwidth)))
+  
+  grid.newpage()
+  grid.draw(combined)
+  
+  # return gtable invisibly
+  invisible(combined)
+}
+
+
+
+
+
+visualizeDensityVariablesGroupedByCategories <- function(data = NA,
+                                                         names_numeric_variables = NA,
+                                                         names_variable_to_group = NA,
+                                                         position = c("bottom", "right")) {
+  # Visualization density of variables on one page
+  #
+  # Args:
+  # data: data as data frame,
+  # names_numeric_variables: vector of names numeric variables,
+  # names_variable_to_group: name of grouped variable on plot
+  # position: position of main legend on page
+  
+  list_of_plots <- list()
+  
+  for(variable in names_numeric_variables) {
+    plot <- ggplot(data = data, aes_string(x = variable, fill = names_variable_to_group, color = names_variable_to_group)) +
+      geom_density(alpha = 0.3, size = 0.5) +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+    list_of_plots[[variable]] <- plot
+  }
+  all_plots <- grid_arrange_shared_legend(plotlist = list_of_plots, ncol = 3)
+  return(all_plots)
+}
