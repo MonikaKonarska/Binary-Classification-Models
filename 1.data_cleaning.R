@@ -6,10 +6,9 @@ source("functions.R")
 
 dataCleaning <- function() {
   
-  #dataPath <- file.path(getwd(), "data")
   load(file.path(dataPath, "dataToTranTestValid.Rdata"))
 
-  structureData <- describe_variables(dataToTranTestValid)
+  structureData <<- describe_variables(dataToTranTestValid)
   levelOfNA <- 0.80
   maxUniqueValues <- 30
   
@@ -23,6 +22,6 @@ dataCleaning <- function() {
   dataToTranTestValid_cleaned <- dataToTranTestValid %>%
     select(-variablesToRemove)
   
-  dataToTranTestValid_cleaned <- dataToTranTestValid_cleaned[which(!dataToTranTestValid_cleaned$home_ownership == "ANY"), ]
+  dataToTranTestValid_cleaned <- dataToTranTestValid_cleaned[which(!dataToTranTestValid_cleaned$home_ownership %in% c("ANY", "NONE", "OTHER")), ]
   save(dataToTranTestValid_cleaned, file = file.path(dataPath, "dataToTranTestValid_cleaned.RData"))
 }
