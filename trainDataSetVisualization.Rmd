@@ -1,0 +1,188 @@
+---
+title: "Data visualization on the training dataset"
+output: 
+  html_document:
+  toc: true
+  toc_float: true
+  number_sections: true
+  toc_depth: 2
+  highlight: tango
+  theme: united
+  always_allow_html: yes
+---
+
+```{r readLibriaries, echo = FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(tidyverse)
+library(purrr)
+library(DataExplorer)
+library(networkD3)
+library(rmarkdown)
+library(knitr)
+source("functionsToVisualize.R")
+
+dataPath <- file.path(getwd(), "data")
+load(file.path(dataPath, "dataToModeling.Rdata"))
+  variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
+  variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
+
+```
+<br/>
+<br/>
+
+## 1. Before creates new features in the training dataset
+
+```{r someInformationFromTrainDataSet, message = FALSE, warning = FALSE, echo = FALSE}
+kable(t(introduce(dataTrain)), row.names = TRUE, col.names = "", format.args = list(big.mark = ","))
+```
+
+<br/>
+<br/>
+
+```{r informationAboutFeatures, message = FALSE, warning = FALSE, echo = FALSE}
+plot_intro(dataTrain)
+
+plot_missing(dataTrain)
+```
+
+<br/>
+<br/>
+
+```{r histograms, message = FALSE, warning = FALSE, echo = FALSE}
+plot_histogram(dataTrain)
+```
+
+<br/>
+<br/>
+
+
+## 2. After creates new features in the training dataset
+
+### Density plots
+
+```{r densityPlots, message = FALSE, warning = FALSE, echo = FALSE }
+source("3.feature_engineering.R")
+dataTrainWithNewFeatures <<- featurEngineering()
+
+numericVariables <- names(dataTrainWithNewFeatures)[map_lgl(dataTrainWithNewFeatures, is.numeric)] 
+factorVariables <- names(dataTrainWithNewFeatures)[map_lgl(dataTrainWithNewFeatures, is.factor)]
+
+visualizeDensityVariablesGroupedByCategories(data = dataTrainWithNewFeatures, 
+                                             names_numeric_variables = numericVariables, 
+                                             names_variable_to_group = "target") 
+```
+
+### Boxplots
+
+```{r boxPlots, message = FALSE, warning = FALSE, echo = FALSE}
+
+list_of_boxplots <- list() 
+ for (variable in numericVariables) { 
+   boxplot <- createPlotsForContinousVariables(variable_name = variable,
+                                               data = dataTrainWithNewFeatures, 
+                                               type_of_plots = "boxplot")  
+   list_of_boxplots[[variable]] <- boxplot 
+   }
+
+cowplot::plot_grid(plotlist = list_of_boxplots)
+
+```
+
+### Target rate - discrete variable
+
+```{r variablesDiscrete, message = FALSE, warning = FALSE, echo = FALSE }
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "home_ownership",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "delinq_2yrs_binary",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "deninq_in_last_year_cat",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "inq_last_6mths_cat",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "inq_last_6mths_catMore",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "if_inq_last_6mths_cat",
+                               timeVariable = "quarter")
+
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "pub_rec_value_binary",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "pub_rec_value_binary",
+                               timeVariable = "quarter")
+
+plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
+                               targetVariable = "target",
+                               variable = "emp_length",
+                               timeVariable = "quarter")
+
+```
+
+
+### Target rate - discrete variable
+
+```{r continuousVariable, message = FALSE, warning = FALSE, echo = FALSE }
+source("functionsToVisualize.R")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "loan_amnt"
+                               ,timeVariable = "quarter"
+                               , targetVariable = "target")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "annual_inc"
+                               ,timeVariable = "quarter"
+                               ,targetVariable = "target")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "dti"
+                               ,timeVariable = "quarter"
+                               ,targetVariable = "target")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "open_acc"
+                               ,timeVariable = "quarter"
+                               ,targetVariable = "target")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "revol_bal"
+                               ,timeVariable = "quarter"
+                               ,targetVariable = "target")
+
+plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
+                               ,variable = "total_acc"
+                               ,timeVariable = "quarter"
+                               ,targetVariable = "target")
+
+```
+
+
+
+
+
+
+
+
