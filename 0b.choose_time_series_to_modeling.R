@@ -13,9 +13,10 @@ chooseTimeSeriesToModeling <- function() {
   dir.create(folderToSavePlots, showWarnings = FALSE)
   dir.create(folderToSavecalculations, showWarnings = FALSE)
 
-  data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d),
-                          earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
-                          last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
+  data <- data %>%
+    mutate(funded_loan_date = convert_date_from_month_year(issue_d),
+           earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
+           last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
   
   data$target <- factor(case_when(data$loan_status == "Fully Paid"  ~ 0,
                                   data$loan_status == "Charged Off" ~ 1,
@@ -26,11 +27,11 @@ chooseTimeSeriesToModeling <- function() {
   plotTargetInAllData <- data %>%
     select(c("target", "funded_loan_date")) %>%
     group_by(funded_loan_date, target) %>%
-   dplyr::summarise( N = n()) %>%
+    dplyr::summarise( N = n()) %>%
     ggplot(aes(x = funded_loan_date, y = N, fill=target)) +
     geom_bar(stat = 'identity', position= position_dodge())+
     ylab("Number of observations") +
-    labs(title = "Target in all data") +
+    labs(title = "Distribution of target") +
     theme(plot.title = element_text(hjust = 0.5))
   
   listOfPlotsTimeSeries[["plotTargetInAllData"]] <- plotTargetInAllData
@@ -53,6 +54,7 @@ chooseTimeSeriesToModeling <- function() {
   
   numberOfMinObsInMonth      <- 1500
   numberOfMinDefaultsInMonth <- 500
+    
   divTrain <- 0.6
   divTest  <- 0.2
   divValid <- 0.2
@@ -62,54 +64,54 @@ chooseTimeSeriesToModeling <- function() {
     filter(N > numberOfMinObsInMonth & bads >= numberOfMinDefaultsInMonth) %>%
     select(funded_loan_date) %>%
    dplyr::summarise(minDate = min(funded_loan_date),
-              maxDate = max(funded_loan_date))
+                    maxDate = max(funded_loan_date))
   
   plotBadRateInAllData <- ggplot(defaultRates, aes(x = funded_loan_date, y = badRate))+
     geom_line() +
-    labs(title = "Bad rate in all data")+
+    labs(title = "Bad rate")+
+    scale_y_continuous(limits = c(0.15, 0.35), labels = scales::percent)+
     theme(plot.title = element_text(hjust = 0.5))
   
   listOfPlotsTimeSeries[["plotBadRateInAllData"]] <- plotBadRateInAllData
   save_plot_jpg(path = folderToSavePlots, plot = plotBadRateInAllData, nameOfPlot = "plotBadRateInAllData")
     
+  minDateInDataSet <- as.Date('2012-01-01')
+  maxDateInDataSet <- as.Date('2014-12-31')
+  
   plotBadRateSelectedData <- defaultRates %>% 
-    filter(N > numberOfMinObsInMonth & bads >= numberOfMinDefaultsInMonth) %>%
-    ggplot( aes(x = funded_loan_date, y = badRate))+
+    filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet) %>%
+    ggplot(aes(x = funded_loan_date, y = badRate))+
     geom_line() +
-    labs(title = "Bad rate - selected data",
-         subtitle = paste("Number of observations in each month is greater than", numberOfMinObsInMonth, "and the number defaults greater than",numberOfMinDefaultsInMonth))+
+    labs(title = "Bad rate - selected data") +
+    scale_y_continuous(limits = c(0.15, 0.35), labels = scales::percent)+
     theme(plot.title = element_text(hjust = 0.5),
           plot.subtitle = element_text(size = 9))
   
   listOfPlotsTimeSeries[["plotBadRateSelectedData"]] <- plotBadRateSelectedData
   save_plot_jpg(path = folderToSavePlots, plot = plotBadRateSelectedData, nameOfPlot = "plotBadRateSelectedData")
   
-  
   plotTargetInSelectedData <- data %>%
     select(c("target", "funded_loan_date")) %>%
-    filter(funded_loan_date >= modelingTimeInterval$minDate & funded_loan_date <= modelingTimeInterval$maxDate) %>%
+    filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet) %>%
     group_by(funded_loan_date, target) %>%
     dplyr::summarise( N = n()) %>%
     ggplot(aes(x = funded_loan_date, y = N, fill = target)) +
     geom_bar(stat = 'identity', position = position_dodge())+
     ylab("Number of observations")+
-    labs(title = "Target in selected data")+
+    labs(title = "Distribution of target - selected data")+
     theme(plot.title = element_text(hjust = 0.5))
   
   listOfPlotsTimeSeries[["plotTargetInSelectedData"]] <- plotTargetInSelectedData
   save_plot_jpg(path = folderToSavePlots, plot = plotTargetInSelectedData, nameOfPlot = "plotTargetInSelectedData")
-  
-  modelingTimeInterval$minDateUpdate <- as.Date('2013-01-01')
-  modelingTimeInterval$maxDateUpdate <- as.Date('2015-06-01')
     
   dataToTranTestValid <- data %>%
-    filter(funded_loan_date >= modelingTimeInterval$minDateUpdate & funded_loan_date <= modelingTimeInterval$minDateUpdate %m+% years(2))
+    filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet %m-% years(1))
   
-  dataToOutOfTime <- data %>%
-    filter(funded_loan_date > modelingTimeInterval$minDateUpdate %m+% years(2) & funded_loan_date <= modelingTimeInterval$maxDateUpdate) 
+  dataNew <- data %>%
+    filter(funded_loan_date > minDateInDataSet %m+% years(1) & funded_loan_date <= maxDateInDataSet) 
   
   save(dataToTranTestValid, file = file.path(dataPath, "dataToTranTestValid.Rdata"))
-  save(dataToOutOfTime, file = file.path(dataPath, "dataToOutOfTime.Rdata"))
+  save(dataNew, file = file.path(dataPath, "dataNew.Rdata"))
   save(listOfPlotsTimeSeries, file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
   
   return(listOfPlotsTimeSeries)
