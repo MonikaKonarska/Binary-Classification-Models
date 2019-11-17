@@ -17,51 +17,51 @@ featureSelection <- function() {
                                                        name_of_time_variable_to_iv = "quarter",
                                                        path_to_save_plot = folderToSavePlots)
 
-  variable_selection_step_iv       <- results$information_table$Summary[which(round(results$information_table$Summary$IV,2) > 0.02), ]
+  variable_selection_step_iv       <- results$information_table$Summary[which(results$information_table$Summary$IV > 0.02), ]
   names_variable_selection_step_iv <- variable_selection_step_iv$Variable
   dataTrainWithSelectionIvFeatures <- dataTrainWithNewFeatures %>% select(c(names_variable_selection_step_iv, "target", "quarter"))
   
-  continuous_variable_with_not_monotonic <- c("loan_amnt",  "open_acc", "revol_bal", "inq_last_6_mths_cat", "mths_since_last_delinq", "mths_since_last_major_derog")
-  discrete_variable_with_not_monotonic   <- c('month', 'purpose', 'emp_length')
-
-  variablesToOptimumBins <- dataTrainWithNewFeatures %>% select_if(is.numeric) %>% names()
-  variablesToOptimumBins <- variablesToOptimumBins[which(!variablesToOptimumBins %in% c('target', continuous_variable_with_not_monotonic))]
+  continuous_variable_with_not_monotonic <<- c("loan_amnt",  "open_acc", "revol_bal", "mths_since_last_delinq", "mths_since_last_major_derog")
+  discrete_variable_with_not_monotonic   <<- c('month', 'purpose', 'emp_length')
+  
+  discrete_variable_with_monotonic_woe <- names(dataTrainWithSelectionIvFeatures)[map_lgl(dataTrainWithSelectionIvFeatures, is.factor)]
+  discrete_variable_with_monotonic_woe <<- discrete_variable_with_monotonic_woe[which(!discrete_variable_with_monotonic_woe %in% c("quarter", discrete_variable_with_not_monotonic))]
+  
+  continuous_variable_with_monotonic_woe <- names(dataTrainWithSelectionIvFeatures)[map_lgl(dataTrainWithSelectionIvFeatures, is.numeric)]
+  continuous_variable_with_monotonic_woe <<- continuous_variable_with_monotonic_woe[which(!continuous_variable_with_monotonic_woe %in% c("target", continuous_variable_with_not_monotonic))]
   
   iv_in_variable_bins    <- calculate_iv_for_variable_with_different_number_bins(data = dataTrainWithNewFeatures,
-                                                                                 numeric_variables = variablesToOptimumBins,
+                                                                                 numeric_variables = continuous_variable_with_monotonic_woe,
                                                                                  max_number_bins = 6,
                                                                                  save_results_path = folderToSavecalculations)
   
   plots_of_iv_and_bins <- create_plots_iv_depends_of_number_bins(iv_in_variable_bins = iv_in_variable_bins)
 
-  selectedVariables <- iv_in_variable_bins %>%
+  selectedNumberOfBins <- iv_in_variable_bins %>%
     filter(!is.na(number_of_bins)) %>%
     group_by(variable_name) %>% slice(which.max(iv)) 
     
-  iVForSelectedcontinuousVariablesWithChoosenBins        <- integer(length(selectedVariables$variable_name))
-  names(iVForSelectedcontinuousVariablesWithChoosenBins) <- selectedVariables[['variable_name']]
+  iVForSelectedcontinuousVariablesWithChoosenBins        <- integer(length(selectedNumberOfBins$variable_name))
+  names(iVForSelectedcontinuousVariablesWithChoosenBins) <- selectedNumberOfBins[['variable_name']]
   
-  for(variable in selectedVariables[['variable_name']]) {
+  for(variable in continuous_variable_with_monotonic_woe) {
     computedIv <- create_infotables(data = dataTrainWithNewFeatures[, c("target", variable)],
                                     y = "target",
-                                    bins = selectedVariables[[which(selectedVariables$variable_name == variable),'number_of_bins']])
+                                    bins = selectedNumberOfBins[[which(selectedNumberOfBins$variable_name == variable),'number_of_bins']])
     iVForSelectedcontinuousVariablesWithChoosenBins[[variable]] <- computedIv$Summary$IV
   }
-  
-  continuousVariableSelected <<- names(iVForSelectedcontinuousVariablesWithChoosenBins[iVForSelectedcontinuousVariablesWithChoosenBins > 0.02])
-  discriteVariableSelected   <<-  c("home_ownership")
-  selectecVariables          <<- c(continuousVariableSelected, discriteVariableSelected)  
-  listOfSeletedVariables     <- list('continuous' = continuousVariableSelected,
-                                     'discrete' = discriteVariableSelected)
-  
+
+  selectecVariables <<- c(discrete_variable_with_monotonic_woe, continuous_variable_with_monotonic_woe) 
+  listOfSeletedVariables <- list('continuous' = continuous_variable_with_monotonic_woe,
+                                 'discrete' = discrete_variable_with_monotonic_woe)
+
   informationTableForSelectedContinuousVariable <- c()
-  
-  for (variable in continuousVariableSelected) {
+  for (variable in continuous_variable_with_monotonic_woe) {
     print(variable)
     result <- calculate_information_value_for_variables(data = dataTrainWithSelectionIvFeatures
                                                         ,names_of_independent_variable = variable
                                                         ,name_of_dependent_variable = "target"
-                                                        ,number_of_bins_for_continuous_variable = selectedVariables[[which(selectedVariables$variable_name == variable),'number_of_bins']]
+                                                        ,number_of_bins_for_continuous_variable = selectedNumberOfBins[[which(selectedNumberOfBins$variable_name == variable),'number_of_bins']]
                                                         ,create_plots_iv_in_time = TRUE
                                                         ,create_plots_woe = TRUE
                                                         ,create_plot_IV = FALSE
@@ -70,15 +70,16 @@ featureSelection <- function() {
     
     informationTableForSelectedContinuousVariable[[variable]] <- result$information_table$Tables[[variable]]
   }
-
-  informationTableForSelectedDiscriteVariable <- calculate_information_value_for_variables(data = dataTrainWithNewFeatures
-                                                                          ,name_of_dependent_variable = "target"
-                                                                          ,names_of_independent_variable = discriteVariableSelected
-                                                                          ,create_plot_IV = FALSE
-                                                                          ,create_plots_woe = TRUE
-                                                                          ,create_plots_iv_in_time = TRUE
-                                                                          ,name_of_time_variable_to_iv = "quarter"
-                                                                          ,path_to_save_plot = folderToSavePlotsSelectedFeatures)
+  
+  informationTableForSelectedDiscriteVariable <- calculate_information_value_for_variables(data = dataTrainWithSelectionIvFeatures
+                                                                                           ,name_of_dependent_variable = "target"
+                                                                                           ,names_of_independent_variable = discrete_variable_with_monotonic_woe
+                                                                                           ,create_plot_IV = FALSE
+                                                                                           ,create_plots_woe = TRUE
+                                                                                           ,create_plots_iv_in_time = TRUE
+                                                                                           ,name_of_time_variable_to_iv = "quarter"
+                                                                                           ,path_to_save_plot = folderToSavePlotsSelectedFeatures)
+  
   
   informationTableSelectedVariables                     <- informationTableForSelectedContinuousVariable
   informationTableSelectedVariables[["home_ownership"]] <- informationTableForSelectedDiscriteVariable$information_table$Tables$home_ownership
@@ -99,7 +100,7 @@ featureSelection <- function() {
   save(listOfSeletedVariables, file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
   save(plots_of_iv_and_bins, iv_in_variable_bins, file = file.path(folderToSavecalculations, "iv_in_variable_bins_plots.Rdata"))
   save(results,  file = file.path(folderToSavecalculations, "resultsOfIV.Rdata"))
-
+  save(listOfSeletedVariables, file = file.path(folderToSavecalculations, "folderToSavecalculations.Rdata"))
 
 }  
      
