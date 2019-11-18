@@ -119,7 +119,18 @@ findLargeCategories <- function(data, minLevelOfLargeCategoryInAll = 0.85, searc
 }
 
 
-
+detect_not_outliers <- function(data_set, column_name, thres = 3, na.rm = TRUE) {
+  mean <- mean(data_set[[column_name]], na.rm = na.rm)
+  sd <- sd(data_set[[column_name]], na.rm = na.rm)
+  
+  dataset <- data_set %>%
+    mutate(isvalueNA = case_when(is.na(!!sym(column_name)) ~1, TRUE ~ 0)) %>%
+    mutate(is_outlier = case_when(isvalueNA == 1 ~ FALSE,
+                                  isvalueNA == 0 ~ (abs(!!sym(column_name)- mean(!!sym(column_name), na.rm = na.rm)) <= thres * sd(!!sym(column_name), na.rm = na.rm)))) %>%
+    select(is_outlier)
+  
+  return(dataset[["is_outlier"]])
+}
 
 
 
