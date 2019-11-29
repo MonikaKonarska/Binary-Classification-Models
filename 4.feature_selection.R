@@ -54,7 +54,7 @@ featureSelection <- function() {
   selectecVariables <<- c(discrete_variable_with_monotonic_woe, continuous_variable_with_monotonic_woe) 
   listOfSeletedVariables <- list('continuous' = continuous_variable_with_monotonic_woe,
                                  'discrete' = discrete_variable_with_monotonic_woe)
-#
+  
   informationTableForSelectedContinuousVariable <- c()
   for (variable in continuous_variable_with_monotonic_woe) {
     print(variable)
@@ -99,7 +99,7 @@ featureSelection <- function() {
   save(iVForSelectedcontinuousVariablesWithChoosenBins, file = file.path(folderToSavecalculations, "iVForSelectedcontinuousVariablesWithChoosenBins.Rdata"))
   save(listOfSeletedVariables, file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
   save(plots_of_iv_and_bins, iv_in_variable_bins, file = file.path(folderToSavecalculations, "iv_in_variable_bins_plots.Rdata"))
-  save(results,  file = file.path(folderToSavecalculations, "resultsOfIV.Rdata"))
+  save(results,  file = file.path(folderToSavecalculations, "resultsOfIV_allvariables.Rdata"))
   save(listOfSeletedVariables, file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
 
 }  
