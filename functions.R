@@ -133,6 +133,38 @@ detect_not_outliers <- function(data_set, column_name, thres = 3, na.rm = TRUE) 
 }
 
 
+assignWoeValueInVariables <- function(variables_name, listOfWoe, data) {
+  # Function creates new variables (_woe) with woe values 
+  # Args:
+  #  variables_name: vector of names variables
+  #  listOfWoe: list of tables (woe values in each inteval variable) for each variables
+  #  data: data.frame
+  
+  for(i in variables_name) {
+    variableNameenquo <- enquo(i)
+    variableNameenquoname <- quo_name(variableNameenquo)
+    variableNameenquocut <- paste0(quo_name(variableNameenquo), "_cut")
+    variableNameenquowoe <- paste0(quo_name(variableNameenquo), "_woe")
+    
+    woeData <- data.frame(listOfWoe[[i]])
+    woeData <- woeData %>%
+      separate(!! quo_name(variableNameenquo), into = c("bin1", "bin2"), sep = ",") %>%
+      mutate(bin1 = as.numeric(substr(bin1, 2, nchar(bin1))),
+             bin2 = as.numeric(substr(bin2, 1, nchar(bin2)-1)))
+    
+    woeData[["bin1"]][1] <- -Inf
+    woeData$binToCut1 <- woeData[["bin1"]]
+    woeData[["binToCut1"]][nrow(woeData)] <- Inf 
+    
+    data[variableNameenquocut] <- cut(x = data[[i]], breaks = woeData[["binToCut1"]], include.lowest = TRUE, dig.lab=10)
+    woeData <- woeData[1:nrow(woeData)-1, ]
+    
+    levels <- levels(data[[variableNameenquocut]])
+    woeData["bins"] <- levels
+    data[variableNameenquowoe] <- plyr::mapvalues(x = data[[variableNameenquocut]], from = woeData[["bins"]], to = woeData[["WOE"]])
+  }
+  return(data)
+}
 
 
 
