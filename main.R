@@ -7,6 +7,7 @@ source("outliers_detection_and_correlations.R")
 source("4.feature_selection.R")
 
 data <- importData()
+data <- data %>% filter(term == "36 months") 
 chooseTimeSeriesToModeling()
 dataCleaning()
 samplingTrainTestValid()
@@ -14,6 +15,13 @@ dataTrainWithNewFeatures <<- featurEngineering()
 dataTrainWithNewFeatures <<- removeOutliers(data_set = dataTrainWithNewFeatures)
 save(dataTrainWithNewFeatures, file = file.path(dataPath, "dataTrainWithNewFeatures.Rdata"))
 featureSelection()
+
+
+
+
+
+
+
 
 
 
