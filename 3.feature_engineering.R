@@ -29,7 +29,7 @@ featurEngineering <- function() {
            number_of_quarter = lubridate::quarter(funded_loan_date),
            year_of_funded_loan = lubridate::year(funded_loan_date),
            quarter = paste(year_of_funded_loan, "Q", number_of_quarter, sep = "")) %>%
-    select(-c(funded_loan_date, earliest_cr_line_date, last_credit_pull_date, number_of_quarter, year_of_funded_loan, delinq_2yrs, mths_since_last_major_derog, mths_since_last_delinq, inq_last_6mths, pub_rec))
+    dplyr::select(-c(funded_loan_date, earliest_cr_line_date, last_credit_pull_date, number_of_quarter, year_of_funded_loan, delinq_2yrs, mths_since_last_major_derog, mths_since_last_delinq, inq_last_6mths, pub_rec))
   
   dataTrainWithNewFeatures <- changeCharacter2FactorVariableWithLackGroup(data = dataTrainWithNewFeatures,
                                                                           typeOfLack = "LACK")
