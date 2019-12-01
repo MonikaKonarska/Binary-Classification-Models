@@ -20,8 +20,14 @@ dataCleaning <- function() {
   variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
   
   dataToTranTestValid_cleaned <- dataToTranTestValid %>%
-    select(-variablesToRemove)
+    dplyr::select(-variablesToRemove)
   
   dataToTranTestValid_cleaned <- dataToTranTestValid_cleaned[which(!dataToTranTestValid_cleaned$home_ownership %in% c("ANY", "NONE", "OTHER")), ]
   save(dataToTranTestValid_cleaned, file = file.path(dataPath, "dataToTranTestValid_cleaned.RData"))
 }
+
+
+
+
+
+
