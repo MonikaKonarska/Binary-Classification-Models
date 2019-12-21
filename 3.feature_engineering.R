@@ -1,14 +1,13 @@
 library(tidyverse)
 library(reshape2)
 source("functions.R")
+load(file.path(dataPath, "dataToModeling.Rdata"))
 
-featurEngineering <- function() {
-
-  load(file.path(dataPath, "dataToModeling.Rdata"))
+featurEngineering <- function(data) {
   
-  dataTrain <- dataTrain[, which(!colnames(dataTrain) %in% c(variablesFromFeature, variablesAnotherToDelete))]
+  data <- data[, which(!colnames(data) %in% c(variablesFromFeature, variablesAnotherToDelete))]
   
-  dataTrainWithNewFeatures <- dataTrain %>%
+  dataTrainWithNewFeatures <- data %>%
     mutate(if_delinq_in2yrs = factor(case_when(delinq_2yrs == 0 ~ 0, TRUE ~ 1), levels = c(0, 1)),
            
            if_delinq_in_last_year = factor(case_when(is.na(mths_since_last_delinq) ~ "LACK",
@@ -16,9 +15,6 @@ featurEngineering <- function() {
                                                TRUE ~ "0")),
            if_delinq_ever = factor(case_when(is.na(mths_since_last_delinq) ~ 0, TRUE ~ 1)),
            if_inq_in_last_6moths = factor(case_when(inq_last_6mths == "0" ~ 0, TRUE ~ 1)),
-           number_inq_in_last_6mths = factor(case_when(inq_last_6mths == 0 ~ "0",
-                                                       inq_last_6mths == 1 ~ "1",
-                                                       inq_last_6mths >= 2 ~ "2+"), levels = c("0", "1", "2+")),
            inq_last_6mths_grouped = factor(case_when(inq_last_6mths >= 4 ~ "4+",
                                                       TRUE ~ as.character(inq_last_6mths)), levels = c("0","1","2","3","4+")),
            if_ever_pub_rec = factor(case_when(pub_rec == 0 ~ 0, TRUE ~1), levels = c(0,1)),
