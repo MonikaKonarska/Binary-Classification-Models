@@ -34,3 +34,43 @@ continuous_variables <- listOfSeletedVariables$continuous
 discrete_variables <- listOfSeletedVariables$discrete
 dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
 ```
+
+
+## Model building
+
+1. Logistic Regression
+    
+    + With weight of evidence coding variables
+    
+        + Feature selecion using Information value (IV) and weight of evidence (Woe)
+
+IV values:        
+```{r iv, message = FALSE, warning = FALSE, echo = FALSE}
+cowplot::plot_grid(results$iv_for_all_variables_plot) 
+
+  results$information_table$Summary %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F)
+cowplot::plot_grid(plotlist =  plots_of_iv_and_bins)  
+```
+
+</br>
+</br>
+
+Woe values:
+
+```{r woe, message = FALSE, warning = FALSE, echo = FALSE}
+
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[1:4])
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[5:8])
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[9:12])
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:16])
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[17:20])
+cowplot::plot_grid(plotlist =  results$plotsOfWoe[21:23])
+```
+
+
+
+
+
+
