@@ -148,8 +148,8 @@ assignWoeValueInVariables <- function(variables_name, listOfWoe, data) {
     
     woeData <- data.frame(listOfWoe[[i]])
     woeData <- woeData %>%
-      separate(!! quo_name(variableNameenquo), into = c("bin1", "bin2"), sep = ",") %>%
-      mutate(bin1 = as.numeric(substr(bin1, 2, nchar(bin1))),
+      tidyr::separate(!! quo_name(variableNameenquo), into = c("bin1", "bin2"), sep = ",") %>%
+      dplyr::mutate(bin1 = as.numeric(substr(bin1, 2, nchar(bin1))),
              bin2 = as.numeric(substr(bin2, 1, nchar(bin2)-1)))
     
     woeData[["bin1"]][1] <- -Inf
