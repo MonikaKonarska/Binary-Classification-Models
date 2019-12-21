@@ -1,0 +1,36 @@
+---
+title: "Feature selection and machine learning models"
+output: html_document
+---
+
+```{r loadInformations, message = FALSE, warning = FALSE, echo = FALSE}
+library(cowplot)
+library(kableExtra)
+library(caret)
+library(dplyr)
+source("functions.R")
+dataPath                          <- file.path(getwd(), "data")
+folderToSavePlots                 <- file.path(getwd(), "plots")
+folderToSavecalculations          <- file.path(getwd(), "calculations")
+folderToSavePlotsSelectedFeatures <- file.path(folderToSavePlots, "selectedFeatures")
+folderToSavecalculations          <- file.path(folderToSavePlots, "..", "calculations")
+
+load(file = file.path(folderToSavecalculations, "resultsOfIV_allvariables.Rdata"))
+load(file = file.path(folderToSavecalculations, "iv_in_variable_bins_plots.Rdata"))
+load(file = file.path(folderToSavecalculations, 'iVForSelectedcontinuousVariablesWithChoosenBins.Rdata'))
+load(file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
+load(file.path(folderToSavecalculations, "categorisationVariableParametrs.Rdata"))
+load(file = file.path(dataPath, "dataNew.Rdata"))
+load(file = file.path(dataPath, "dataTrainWithNewFeatures.Rdata"))
+load(file = file.path(folderToSavecalculations, "own_choosen_variables_using_owe.Rdata")) ##dane do modelu logistycznego, gdzie sama wybralam bins do 
+load(file = file.path(folderToSavecalculations, "plots_iv_in_time_for_choosen_variables.Rdata"))
+load(file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
+  variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
+  variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
+  
+groupedVariables <- c("quarter", "month")
+variablesName <- names(dataTrainWithNewFeatures)[which(!names(dataTrainWithNewFeatures) %in% groupedVariables)]
+continuous_variables <- listOfSeletedVariables$continuous
+discrete_variables <- listOfSeletedVariables$discrete
+dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
+```
