@@ -7,7 +7,10 @@ output: html_document
 library(cowplot)
 library(kableExtra)
 library(caret)
+library(MASS)
+library(ROCR)
 library(dplyr)
+library(formattable)
 source("functions.R")
 dataPath                          <- file.path(getwd(), "data")
 folderToSavePlots                 <- file.path(getwd(), "plots")
@@ -47,11 +50,19 @@ dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWit
 IV values:        
 ```{r iv, message = FALSE, warning = FALSE, echo = FALSE}
 cowplot::plot_grid(results$iv_for_all_variables_plot) 
+rownames(results$information_table$Summary) <- c()
 
-  results$information_table$Summary %>%
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F)
+results$information_table$Summary %>%
+  mutate(IV = round(IV, 5),
+         `Is it a useful variable? ?` = IV)%>%
+  formattable(list(`Is it a useful variable? ?` = formatter("span", x ~ icontext(ifelse(x >0.02, "ok", "remove"),
+                                                                                        ifelse(x>0.02, "Yes", "No")),
+                                                                   style = x ~ style(color = ifelse(x>0.02, "green", "red")))))
+
+
 cowplot::plot_grid(plotlist =  plots_of_iv_and_bins)  
+
+
 ```
 
 </br>
@@ -68,6 +79,48 @@ cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:16])
 cowplot::plot_grid(plotlist =  results$plotsOfWoe[17:20])
 cowplot::plot_grid(plotlist =  results$plotsOfWoe[21:23])
 ```
+
+
+
+```{r dataWithWithWoe, message = FALSE, warning = FALSE, echo = FALSE }
+dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
+                                                          listOfWoe = informationTableSelectedVariables,
+                                                          data = dataTrainWithNewFeatures)
+
+dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(
+  with(dataTrainWithNewFeatures, dplyr::case_when(home_ownership == "MORTGAGE" ~ -0.19739742,
+                                                  home_ownership == "OWN"  ~ 0.07469287,
+                                                  home_ownership == "RENT" ~ 0.17447816)))
+
+dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
+dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
+dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
+  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
+            funs(as.numeric(as.character(.))))
+
+```
+
+        + Feature selecion using Information value (IV) and weight of evidence (Woe)
+
+```{r correlations, message = FALSE, warning = FALSE, echo = FALSE}
+
+names_of_independent_variables_coded_woe <- names(dataSetWithVariablesCodedWoe)
+names_of_independent_variables_coded_woe <- names_of_independent_variables_coded_woe[which(!names_of_independent_variables_coded_woe %in% c("target"))]
+
+correlations_independent_variables_coded_woe <- round(cor(dataSetWithVariablesCodedWoe[, names_of_independent_variables_coded_woe]),3)
+corrplot::corrplot(correlations_independent_variables_coded_woe)
+colnames(correlations_independent_variables_coded_woe)[findCorrelation(correlations_independent_variables_coded_woe, cutoff = 0.6)]
+
+correlations_independent_variables_coded_woe %>%
+  as.data.frame() %>%
+  formattable(list(area(col = 1:ncol(correlations_independent_variables_coded_woe)) ~ color_bar("orange")))
+
+```
+
+I created the full model with all the choosen independent variables (annual_inc_woe, dti_woe, tot_cur_bal_woe, total_rev_hi_lim_woe, revol_util_woe, total_acc_woe, home_ownership_woe)
+Let’s name it model_lr_woe Summary of the model is as below:
+
+
 
 
 
