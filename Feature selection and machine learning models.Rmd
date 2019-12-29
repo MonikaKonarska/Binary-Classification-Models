@@ -59,10 +59,7 @@ results$information_table$Summary %>%
                                                                                         ifelse(x>0.02, "Yes", "No")),
                                                                    style = x ~ style(color = ifelse(x>0.02, "green", "red")))))
 
-
 cowplot::plot_grid(plotlist =  plots_of_iv_and_bins)  
-
-
 ```
 
 </br>
@@ -118,12 +115,98 @@ correlations_independent_variables_coded_woe %>%
 ```
 
 I created the full model with all the choosen independent variables (annual_inc_woe, dti_woe, tot_cur_bal_woe, total_rev_hi_lim_woe, revol_util_woe, total_acc_woe, home_ownership_woe)
-Let’s name it model_lr_woe Summary of the model is as below:
+Let’s name it model_lr_woe. Summary of the model is as below:
+
+
+ 
+```{r logisticRegressionWithWoe, message = FALSE, warning = FALSE, echo = FALSE }
+
+dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
+                                                          listOfWoe = informationTableSelectedVariables,
+                                                          data = dataTrainWithNewFeatures)
+
+dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTrainWithNewFeatures,
+                                                                       dplyr::case_when(
+                                                                         home_ownership == "MORTGAGE" ~ -0.19739742,
+                                                                         home_ownership == "OWN"  ~ 0.07469287,
+                                                                         home_ownership == "RENT" ~ 0.17447816)))
+
+dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
+dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
+dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
+  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"), funs(as.numeric(as.character(.))))
+
+
+```
+
+```{r logisticRegressionWithWoeModel, message = FALSE, warning = FALSE, echo = TRUE}
+model_lr_woe <- glm(target~annual_inc_woe+dti_woe+tot_cur_bal_woe+total_rev_hi_lim_woe+revol_util_woe+total_acc_woe+home_ownership_woe,
+                    data = dataSetWithVariablesCodedWoe,
+                    family = binomial(link = "logit"))
+summary(model_lr_woe)
+```
+
+Lets evaluate the model `model_lr_woe` performance. I used the train and also test and valid dataset to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
+
+```{r glmPredictions, message = FALSE, warning = FALSE, echo = FALSE, include = FALSE}
+source("3.feature_engineering.R")
+source("functions.R")
+load(file = file.path(dataPath, "dataToModeling.RData"))
+dataTest  <- featurEngineering(data = dataTest)
+dataTest  <- removeOutliers(data_set = dataTest)
+dataValid <- featurEngineering(data = dataValid)
+dataValid <- removeOutliers(data_set = dataValid)
+
+
+dataTestWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
+                                                           listOfWoe = informationTableSelectedVariables,
+                                                           data = dataTest)
+
+dataTestWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTestWithVariablesCodedWoe,
+                                                                        dplyr::case_when(
+                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
+                                                                          home_ownership == "OWN"  ~ 0.07469287,
+                                                                          home_ownership == "RENT" ~ 0.17447816)))
+
+dataTestWithVariablesCodedWoe <- dataTestWithVariablesCodedWoe[which(!is.na(dataTestWithVariablesCodedWoe$target)),]
+
+dataTestWithVariablesCodedWoe <- dataTestWithVariablesCodedWoe %>%
+  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
+            funs(as.numeric(as.character(.))))
+
+
+dataValidWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
+                                                           listOfWoe = informationTableSelectedVariables,
+                                                           data = dataValid)
+
+dataValidWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataValidWithVariablesCodedWoe,
+                                                                        dplyr::case_when(
+                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
+                                                                          home_ownership == "OWN"  ~ 0.07469287,
+                                                                          home_ownership == "RENT" ~ 0.17447816)))
+
+dataValidWithVariablesCodedWoe <- dataValidWithVariablesCodedWoe[which(!is.na(dataValidWithVariablesCodedWoe$target)),]
+
+dataValidWithVariablesCodedWoe <- dataValidWithVariablesCodedWoe %>%
+  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
+            funs(as.numeric(as.character(.))))
+
+train_predictions <- dataSetWithVariablesCodedWoe['target'] 
+test_predictions  <- dataTestWithVariablesCodedWoe['target']
+valid_predictions <- dataValidWithVariablesCodedWoe['target']
+
+train_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataSetWithVariablesCodedWoe, type = "response")
+test_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataTestWithVariablesCodedWoe, type = "response")
+valid_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataValidWithVariablesCodedWoe, type = "response")
+
+```
 
 
 
 
 
+
+Sometimes models automatically convert factor variables into binary dummy variables (for example glm() - logistic regression). while other models don`t. So after using logistic regression to predict default, I decided to use other algorithms to modeling. To do that it is worth creating some new variables - dummy variables.  
 
 
 
