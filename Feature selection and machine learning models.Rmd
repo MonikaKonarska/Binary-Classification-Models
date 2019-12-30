@@ -10,8 +10,10 @@ library(caret)
 library(MASS)
 library(ROCR)
 library(dplyr)
+library(ggplot2)
 library(formattable)
 source("functions.R")
+source("outliers_detection_and_correlations.R")
 dataPath                          <- file.path(getwd(), "data")
 folderToSavePlots                 <- file.path(getwd(), "plots")
 folderToSavecalculations          <- file.path(getwd(), "calculations")
@@ -36,50 +38,131 @@ variablesName <- names(dataTrainWithNewFeatures)[which(!names(dataTrainWithNewFe
 continuous_variables <- listOfSeletedVariables$continuous
 discrete_variables <- listOfSeletedVariables$discrete
 dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
+
+
+#file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
+
+```
+
+## 1. Data
+
+### 1.1 Import data
+
+
+```{r dataset, message = FALSE, warning = FALSE, echo = FALSE}
+cowplot::plot_grid(plotlist = listOfPlotsTimeSeries)
+
 ```
 
 
-## Model building
+### 1.2 Cleaning data
 
-1. Logistic Regression
-    
-    + With weight of evidence coding variables
-    
-        + Feature selecion using Information value (IV) and weight of evidence (Woe)
+### 1.3 Feature engineering
 
-IV values:        
+
+
+## 2. Models building
+
+### 2.1 Logistic Regression
+<br/>
+<br/>
+
+#### 2.2 Using Information value (IV) and weight of evidence (Woe)   
+
+- **Feature selecion using the Information value (IV) and the weight of evidence (Woe)**
+
+<br/>
+Using measure <em>Information value</em> you can select important variables in a predictive model.
+<p>This measure helps to rank variables on the basis of their importance.</p> 
+
+Information values for all variables from the <em>Lending Club dataset</em> are as follows:
+
 ```{r iv, message = FALSE, warning = FALSE, echo = FALSE}
-cowplot::plot_grid(results$iv_for_all_variables_plot) 
-rownames(results$information_table$Summary) <- c()
-
-results$information_table$Summary %>%
-  mutate(IV = round(IV, 5),
-         `Is it a useful variable? ?` = IV)%>%
-  formattable(list(`Is it a useful variable? ?` = formatter("span", x ~ icontext(ifelse(x >0.02, "ok", "remove"),
-                                                                                        ifelse(x>0.02, "Yes", "No")),
-                                                                   style = x ~ style(color = ifelse(x>0.02, "green", "red")))))
-
-cowplot::plot_grid(plotlist =  plots_of_iv_and_bins)  
+    cowplot::plot_grid(results$iv_for_all_variables_plot) 
+    
 ```
 
-</br>
+
+When information value is less than 0.02 means that it is not useful for prediction. For 11 variables from the dataset invormation value is greater than 0.02:
+
+```{r table_of_iv, message = FALSE, warning = FALSE, echo = FALSE}
+    table_of_iv <- results$information_table$Summary %>%
+      mutate(IV = round(IV, 5),
+          `Is it a useful variable?` = IV)
+    rownames(table_of_iv) <- c()
+    
+    formattable(table_of_iv,
+                align = c("l","r"),
+                list(IV = color_bar("lightgreen"),
+                     `Is it a useful variable?` = formatter("span", x ~ icontext(ifelse(x >0.02, "ok", "remove"),
+                                                                                     ifelse(x>0.02, "Yes", "No")),
+                                                                style = x ~ style(color = ifelse(x>0.02, "green", "red")))))
+
+```
 </br>
 
-Woe values:
+
+The weight of evidence describes as a measure of the separation of good and bad borrowers. Bad borrowers are customers who defaulted on a loan. Instead of good borrowers are customers who paid back a loan. Analyzing results from these <em>Woe plots</em> It is important to remember that:
+
+- The WOE should be monotonic i.e. either growing or decreasing with the bins,
+- Woe can handle missing values as missing values can be binned separately. It is natural that can be Woe value for bin 'NA' of a variable.
+
+To read more about terminology of <em>IV</em> and <em>Woe</em> click [here](http://ucanalytics.com/blogs/information-value-and-weight-of-evidencebanking-case/). 
+Here some plots about Woe for each independent variable:
+</br>
 
 ```{r woe, message = FALSE, warning = FALSE, echo = FALSE}
-
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[1:4])
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[5:8])
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[9:12])
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:16])
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[17:20])
-cowplot::plot_grid(plotlist =  results$plotsOfWoe[21:23])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[1:4])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[5:8])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[9:12])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:16])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[17:20])
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[21:23])
 ```
 
+We can choose the right prospective variables to build a logistic regression model when we use information about measure IV and Woe (is monotonic or not for a variable). These variables fulfill the mentioned conditions:
+
+```{r bins_iv, message = FALSE, warning = FALSE, echo = TRUE}
+listOfSeletedVariables$continuous
+listOfSeletedVariables$discrete
+```
+</br>
+
+Lets see how <em>IV</em> measure changes over time. How strong this measure is different over time ? 
+There are times in which a decrease in value <em>IV</em> is noticeable. It can be seen that the decline usually occurs from 2012 Q4. Greater <em>IV</em> stabilization has been visible since 2013 Q2.
+
+```{r plots_iv_in_time_for_choosen_variables, message = FALSE, warning = FALSE, echo = FALSE}
+cowplot::plot_grid(plotlist = plots_iv_in_time_for_choosen_variables)
+```
+</br>
 
 
-```{r dataWithWithWoe, message = FALSE, warning = FALSE, echo = FALSE }
+Lets see how the <em>IV</em> measure depends on the number of bins for each selected, continuous variable.
+It can be seen that the <em>IV</em> value for the number of bins less than or equal to 3 has a small IV value. However, these changes for the next number of the bins and the <em>IV</em> measure increases.
+</br>
+```{r plots_of_iv_and_bins, message = FALSE, warning = FALSE, echo = FALSE}
+cowplot::plot_grid(plotlist = plots_of_iv_and_bins)
+
+```
+
+</br>
+</br>
+
+- **Coding selected variables using the value of the weight of evidence (Woe)**
+
+</br>
+
+Weight of evidence (WOE) coding of a nominal or discrete variable is widely used when preparing predictors for usage in binary logistic regression models. To build logistic regression model we can use Woe information. Here the example for <em>tot_cur_bal</em> variable and the results of coding.
+
+```{r example_code_woe, message = FALSE, warning = FALSE, echo = FALSE }
+informationTableSelectedVariables$tot_cur_bal %>%
+  formattable(list(`WOE` = color_bar("lightgreen")))
+```
+
+</br>
+
+
+```{r code_woe, message = FALSE, warning = FALSE, echo = FALSE }
 dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
                                                           listOfWoe = informationTableSelectedVariables,
                                                           data = dataTrainWithNewFeatures)
@@ -88,53 +171,82 @@ dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(
   with(dataTrainWithNewFeatures, dplyr::case_when(home_ownership == "MORTGAGE" ~ -0.19739742,
                                                   home_ownership == "OWN"  ~ 0.07469287,
                                                   home_ownership == "RENT" ~ 0.17447816)))
+```
 
+</br>
+</br>
+
+```{r table_woe_variables, message = FALSE, warning = FALSE, echo = FALSE}
+dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
+kable(head(dataSetWithVariablesCodedWoe, 5)) %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+</br>
+</br>
+
+```{r train_dataset, message = FALSE, warning = FALSE, echo = FALSE}
 dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
 dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
 dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
   mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
             funs(as.numeric(as.character(.))))
-
 ```
 
-        + Feature selecion using Information value (IV) and weight of evidence (Woe)
+</br>
+</br>
 
-```{r correlations, message = FALSE, warning = FALSE, echo = FALSE}
+- **Correlations between independent variables**
 
+Corrplot:
+
+```{r corrplot, message = FALSE, warning = FALSE, echo = FALSE}
 names_of_independent_variables_coded_woe <- names(dataSetWithVariablesCodedWoe)
 names_of_independent_variables_coded_woe <- names_of_independent_variables_coded_woe[which(!names_of_independent_variables_coded_woe %in% c("target"))]
 
 correlations_independent_variables_coded_woe <- round(cor(dataSetWithVariablesCodedWoe[, names_of_independent_variables_coded_woe]),3)
 corrplot::corrplot(correlations_independent_variables_coded_woe)
-colnames(correlations_independent_variables_coded_woe)[findCorrelation(correlations_independent_variables_coded_woe, cutoff = 0.6)]
+```
 
+</br>
+
+Correlation matrix:
+
+</br>
+
+```{r corrmatrix, message = FALSE, warning = FALSE, echo = FALSE }
 correlations_independent_variables_coded_woe %>%
   as.data.frame() %>%
   formattable(list(area(col = 1:ncol(correlations_independent_variables_coded_woe)) ~ color_bar("orange")))
 
 ```
 
-I created the full model with all the choosen independent variables (annual_inc_woe, dti_woe, tot_cur_bal_woe, total_rev_hi_lim_woe, revol_util_woe, total_acc_woe, home_ownership_woe)
-Let’s name it model_lr_woe. Summary of the model is as below:
+</br>
+</br>
 
+#### 2.2 Build logistic regression models
+
+The first logistic regression model used all the choosen independent variables (annual_inc_woe, dti_woe, tot_cur_bal_woe, total_rev_hi_lim_woe, revol_util_woe, total_acc_woe, home_ownership_woe)
+Let’s name it model_lr_woe. Summary of the model is as below:
 
  
 ```{r logisticRegressionWithWoe, message = FALSE, warning = FALSE, echo = FALSE }
 
-dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
-                                                          listOfWoe = informationTableSelectedVariables,
-                                                          data = dataTrainWithNewFeatures)
-
-dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTrainWithNewFeatures,
-                                                                       dplyr::case_when(
-                                                                         home_ownership == "MORTGAGE" ~ -0.19739742,
-                                                                         home_ownership == "OWN"  ~ 0.07469287,
-                                                                         home_ownership == "RENT" ~ 0.17447816)))
-
-dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
-dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
-dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
-  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"), funs(as.numeric(as.character(.))))
+# dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
+#                                                           listOfWoe = informationTableSelectedVariables,
+#                                                           data = dataTrainWithNewFeatures)
+# 
+# dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTrainWithNewFeatures,
+#                                                                        dplyr::case_when(
+#                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
+#                                                                          home_ownership == "OWN"  ~ 0.07469287,
+#                                                                          home_ownership == "RENT" ~ 0.17447816)))
+# 
+# dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
+# dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
+# dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
+#   mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"), funs(as.numeric(as.character(.))))
 
 
 ```
@@ -146,67 +258,7 @@ model_lr_woe <- glm(target~annual_inc_woe+dti_woe+tot_cur_bal_woe+total_rev_hi_l
 summary(model_lr_woe)
 ```
 
-Lets evaluate the model `model_lr_woe` performance. I used the train and also test and valid dataset to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
-
-```{r glmPredictions, message = FALSE, warning = FALSE, echo = FALSE, include = FALSE}
-source("3.feature_engineering.R")
-source("functions.R")
-load(file = file.path(dataPath, "dataToModeling.RData"))
-dataTest  <- featurEngineering(data = dataTest)
-dataTest  <- removeOutliers(data_set = dataTest)
-dataValid <- featurEngineering(data = dataValid)
-dataValid <- removeOutliers(data_set = dataValid)
-
-
-dataTestWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
-                                                           listOfWoe = informationTableSelectedVariables,
-                                                           data = dataTest)
-
-dataTestWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTestWithVariablesCodedWoe,
-                                                                        dplyr::case_when(
-                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
-                                                                          home_ownership == "OWN"  ~ 0.07469287,
-                                                                          home_ownership == "RENT" ~ 0.17447816)))
-
-dataTestWithVariablesCodedWoe <- dataTestWithVariablesCodedWoe[which(!is.na(dataTestWithVariablesCodedWoe$target)),]
-
-dataTestWithVariablesCodedWoe <- dataTestWithVariablesCodedWoe %>%
-  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
-            funs(as.numeric(as.character(.))))
-
-
-dataValidWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
-                                                           listOfWoe = informationTableSelectedVariables,
-                                                           data = dataValid)
-
-dataValidWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataValidWithVariablesCodedWoe,
-                                                                        dplyr::case_when(
-                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
-                                                                          home_ownership == "OWN"  ~ 0.07469287,
-                                                                          home_ownership == "RENT" ~ 0.17447816)))
-
-dataValidWithVariablesCodedWoe <- dataValidWithVariablesCodedWoe[which(!is.na(dataValidWithVariablesCodedWoe$target)),]
-
-dataValidWithVariablesCodedWoe <- dataValidWithVariablesCodedWoe %>%
-  mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"),
-            funs(as.numeric(as.character(.))))
-
-train_predictions <- dataSetWithVariablesCodedWoe['target'] 
-test_predictions  <- dataTestWithVariablesCodedWoe['target']
-valid_predictions <- dataValidWithVariablesCodedWoe['target']
-
-train_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataSetWithVariablesCodedWoe, type = "response")
-test_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataTestWithVariablesCodedWoe, type = "response")
-valid_predictions$predictions_lg_woe <- predict(model_lr_woe, newdata = dataValidWithVariablesCodedWoe, type = "response")
-
-```
-
-
-
-
-
-
-Sometimes models automatically convert factor variables into binary dummy variables (for example glm() - logistic regression). while other models don`t. So after using logistic regression to predict default, I decided to use other algorithms to modeling. To do that it is worth creating some new variables - dummy variables.  
+Lets evaluate the model `model_lr_woe` performance. To do that lets use a train and also test and valid dataset to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
 
 
 
