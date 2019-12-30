@@ -44,9 +44,17 @@ dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWit
 
 ```
 
-## 1. Data
+## 1. Overview 
+This is a case study of machine learnings model using R programming.
+Used algorithms:
 
-### 1.1 Import data
+- Logistic Regression
+- Decision Trees
+- Bagging with Random Forests
+- Boosting with AdaBoost
+
+
+### 1.1 Data
 
 
 ```{r dataset, message = FALSE, warning = FALSE, echo = FALSE}
