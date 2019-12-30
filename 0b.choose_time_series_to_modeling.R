@@ -8,8 +8,6 @@ source("functions_to_feature_selection.R")
 
 chooseTimeSeriesToModeling <- function() {
   
-  folderToSavePlots               <<- file.path(getwd(), "plots")
-  folderToSavecalculations        <<- file.path(getwd(), "calculations")
   listOfPlotsTimeSeries           <- list()
   dir.create(folderToSavePlots, showWarnings = FALSE)
   dir.create(folderToSavecalculations, showWarnings = FALSE)
