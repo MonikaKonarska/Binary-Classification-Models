@@ -38,5 +38,5 @@ The purpose of this project is use posibilities of machine learning, statistics 
 
 Visualizations - training dataset: [here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/trainDataSetVisualization.html)
 
-
-
+Machine learning models (in progress):
+[here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/Feature_selection_and_machine_learning_models.html)
