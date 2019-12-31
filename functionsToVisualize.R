@@ -2,6 +2,7 @@
 # library(dplyr)
 library(tidyverse)
 library(cowplot)
+library(scales)
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Multiple plot function
@@ -242,7 +243,12 @@ plotContinuousVariableWithTarget <- function(data, variable, targetVariable, tim
   boxplot <- plotBoxPlotWithVariableAndTarget(data, variable, targetVariable)
   plotLine <- plotLinePlotWithMeanVariableAndTarget(data, variable, targetVariable, timeVariable)
   plotRate <- plotTargetRateInQuantileVariable(data, variable, targetVariable)
-  multiplot(boxplot, plotLine, plotRate, cols = 2)
+  
+  title_theme <- ggdraw() + draw_label(variable)
+  plotWithTheme <- plot_grid(title_theme, boxplot,  nrow = 1)+theme(plot.background = element_rect(fill = "cornsilk"))
+  plots2 <- plot_grid(plotLine, plotRate, nrow=1)
+  plot_grid(plotWithTheme, plots2, nrow = 2)
+  #multiplot(boxplot, plotLine, plotRate, cols = 2)
 }
 
 
