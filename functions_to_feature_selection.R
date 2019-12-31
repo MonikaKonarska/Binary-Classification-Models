@@ -3,7 +3,7 @@
 calculate_information_value_for_variables <- function(data = NA,
                                                       name_of_dependent_variable = NA,
                                                       names_of_independent_variable = NA,
-                                                      number_of_bins_for_continuous_variable = 6,
+                                                      number_of_bins_for_continuous_variable = NA,
                                                       create_plot_IV = FALSE,
                                                       create_plots_woe = FALSE,
                                                       create_plots_iv_in_time = FALSE,
@@ -27,6 +27,7 @@ calculate_information_value_for_variables <- function(data = NA,
   if(sum(!is.na(names_of_independent_variable)) > 0) {
     data <- data[, c(names_of_independent_variable, name_of_dependent_variable, name_of_time_variable_to_iv)]
   }
+  if(is.na(number_of_bins_for_continuous_variable)){ number_of_bins_for_continuous_variable <- 6}
   
   all_results               <- list()
   information_table         <- create_infotables(data = data, y = name_of_dependent_variable, bins = number_of_bins_for_continuous_variable)
@@ -149,10 +150,10 @@ create_plot_iv_in_time_for_each_variable <- function(data,
   for (variable in prospectiveVariables) {
     for (idx_time in list_of_values_time_variable) {
       dataToPlot <- data %>%
-        select_(name_of_time_variable_to_iv, variable, name_of_dependent_variable) %>%
+        select(name_of_time_variable_to_iv, variable, name_of_dependent_variable) %>%
         filter(!!sym(name_of_time_variable_to_iv) == idx_time) %>%
         select(-c(name_of_time_variable_to_iv))
-    
+
       informationTableForVariable <- create_infotables(dataToPlot, y = name_of_dependent_variable, bins = number_of_bins_for_continuous_variable)
       tablesOfWoeInTimeByEachVariable[which(tablesOfWoeInTimeByEachVariable[['time']] == idx_time), variable] <- informationTableForVariable$Summary$IV
     }
@@ -217,7 +218,7 @@ create_plots_iv_depends_of_number_bins <- function(iv_in_variable_bins) {
       ggplot(aes(x = number_of_bins, y= iv))+
       geom_point(size = 4, color = "red") +
       xlab("Number of bins")+
-      ggtitle(label = "Information value in different number of bins", subtitle = paste("Variable: ", variable, sep = ""))+
+      ggtitle(label = "IV value\ndepends on number of bins", subtitle = variable)+
       theme_light()
     plots_of_iv_and_bins[[variable]] <- plot
   }
@@ -226,20 +227,23 @@ create_plots_iv_depends_of_number_bins <- function(iv_in_variable_bins) {
 
 
 
-categoriseIndependentVariableInModel <- function(data = NA) {
-  
+categoriseIndependentVariableInModel <- function(data = NA, categorisationVariableParametrs) {
   data <- data %>%
-    mutate(dtiCateg = cut(x = dti, breaks = c(0, 10.18, 14.62, 18.95, 24.2, Inf), include.lowest = TRUE),
-           annual_incCateg = cut(annual_inc, breaks = c(0, 42982, 56992, 72010, 96999, Inf), include.lowest = TRUE),
+    mutate(dtiCateg = cut(x = dti, breaks = c(-Inf, 10.18,  14.62, 18.95, 24.2, Inf), include.lowest = TRUE),
+           annual_incCateg = cut(annual_inc, breaks = c(-Inf, 42982 , 56992, 72010, 96999, Inf), include.lowest = TRUE),
            revol_utilCateg = case_when(is.na(revol_util) ~ "NA",
-                                       TRUE ~ as.character(cut(x = revol_util, breaks = c(0, 34, 49.5, 63.1, 77.4, 892.3, Inf)))),
-           revol_utilCateg = factor(revol_utilCateg, levels = c("NA", sort(x = unique(data$revol_utilCateg))[1:5])),
-           total_rev_hi_limCateg = cut(x = total_rev_hi_lim, breaks = c(0, 11595, 18250, 26800, 41486, Inf)))
+                                       TRUE ~ as.character(cut(x = revol_util, breaks = c(-Inf, 28.3, 41.2, 51.5, 61.2, 70.9, 82.2,Inf)))),
+           revol_utilCateg = factor(revol_utilCateg),
+           total_rev_hi_limCateg = cut(x = total_rev_hi_lim, breaks = c(-Inf, 9660, 14390, 19396, 25472, 33993, 48799, Inf)),
+           tot_cur_balCateg = cut(x = tot_cur_bal, breaks = c(-Inf, 20475, 39135, 83666, 168333, 265146, Inf)),
+           home_ownershipCateg = as.factor(x = home_ownership))
   
   levels(data$dtiCateg)              <- c("[0,10.18]", "[10.19,14.62]", "[14.63,18.95]", "[18.96,24.2]","[24.21,39.99]")
   levels(data$annual_incCateg)       <- c("[3000,42982]", "[43000,56992]", "[57000,72010]", "[72012,96999]", "[97000,8706582]")
-  levels(data$revol_utilCateg)       <- c("NA", "[0,34]", "[34.1,49.5]", "[49.6,63.1]", "[63.2,77.4]", "[77.5,892.3]")
-  levels(data$total_rev_hi_limCateg) <- c("[0,11595]", "[11600,18250]", "[18300,26800]", "[26809,41486]", "[41500,1998700]")
+  levels(data$revol_utilCateg)       <- c("[0,28.3]", "[28.4,41.2]", "[41.3,51.5]", "[51.6,61.2]", "[61.3,70.9]", "[71,82.2]", "[82.3,892.3]", "NA")
+  levels(data$total_rev_hi_limCateg) <- c("[0,9660]", "[9700,14390]", "[14400,19396]", "[19400,25472]", "[25500,33993]", "[34000,48799]", "[48800,1998700]")
+  levels(data$tot_cur_balCateg)      <- c("[0,20475]", "[20477,39135]","[39136,83666]", "[83670,168333]", "[168334,265146]", "[265151,3437283]")
+  levels(data$home_ownershipCateg)   <- c("MORTGAGE", "OWN", "RENT")
   
   data <- data %>%
     mutate(dtiWoe = plyr::mapvalues(x = dtiCateg,
@@ -253,10 +257,14 @@ categoriseIndependentVariableInModel <- function(data = NA) {
                                             to = categorisationVariableParametrs[["woe"]]$revol_util)
            ,total_rev_hi_limWoe = plyr::mapvalues(x = total_rev_hi_limCateg,
                                                   from = categorisationVariableParametrs[["bins"]]$total_rev_hi_lim,
-                                                  to = categorisationVariableParametrs[["woe"]]$total_rev_hi_lim),
-           home_ownershipWoe = plyr::mapvalues(x = home_ownership,
-                                               from = categorisationVariableParametrs[["bins"]]$home_ownership,
-                                               to = categorisationVariableParametrs[["woe"]]$home_ownership))
+                                                  to = categorisationVariableParametrs[["woe"]]$total_rev_hi_lim)
+           ,tot_cur_balWoe = plyr::mapvalues(x = tot_cur_balCateg,
+                                             from = categorisationVariableParametrs[["bins"]]$tot_cur_bal,
+                                             to = categorisationVariableParametrs[["woe"]]$tot_cur_bal)
+           ,home_ownershipWoe = plyr::mapvalues(x = home_ownership,
+                                                from = categorisationVariableParametrs[["bins"]]$home_ownership,
+                                                to = categorisationVariableParametrs[["woe"]]$home_ownership))
+  
   return(data)
 }
 
