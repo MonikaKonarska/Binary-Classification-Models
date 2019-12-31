@@ -47,6 +47,9 @@ Machine learning models (in progress):
 [more details here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/Feature_selection_and_machine_learning_models.html)
 
 
+[Let's get more information about the borrowers]()
+
+
 ### Conclusions
 
 
