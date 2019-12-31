@@ -32,7 +32,7 @@ load(file.path(dataPath, "dataToModeling.Rdata"))
 <br/>
 <br/>
 
-## 1. Before creates new features in the training dataset
+## <strong><em>1. Before creates new features in the training dataset</em></strong>
 
 ```{r someInformationFromTrainDataSet, message = FALSE, warning = FALSE, echo = FALSE}
 kable(t(introduce(dataTrain)), row.names = TRUE, col.names = "", format.args = list(big.mark = ","))
@@ -58,9 +58,11 @@ plot_histogram(dataTrain)
 <br/>
 
 
-## 2. After creates new features in the training dataset
+## <strong><em>2. After creates new features in the training dataset</em></strong>
 
 ### Density plots
+<br/>
+<br/>
 
 ```{r densityPlots, message = FALSE, warning = FALSE, echo = FALSE }
 source("3.feature_engineering.R")
@@ -74,7 +76,12 @@ visualizeDensityVariablesGroupedByCategories(data = dataTrainWithNewFeatures,
                                              names_variable_to_group = "target") 
 ```
 
+<br/>
+<br/>
+
 ### Boxplots
+<br/>
+<br/>
 
 ```{r boxPlots, message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -90,7 +97,13 @@ cowplot::plot_grid(plotlist = list_of_boxplots)
 
 ```
 
-### Target rate - discrete variable
+<br/>
+<br/>
+
+### <em>Target rate - discrete variable</em>
+
+<br/>
+<br/>
 
 ```{r variablesDiscrete, message = FALSE, warning = FALSE, echo = FALSE }
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
@@ -123,7 +136,6 @@ plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                variable = "if_inq_last_6mths_cat",
                                timeVariable = "quarter")
 
-
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
                                variable = "pub_rec_value_binary",
@@ -132,17 +144,16 @@ plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
                                variable = "pub_rec_value_binary",
-                               timeVariable = "quarter")
-
-plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
-                               targetVariable = "target",
-                               variable = "emp_length",
                                timeVariable = "quarter")
 
 ```
 
+<br/>
+<br/>
 
-### Target rate - discrete variable
+### <em>Target rate - continuous variable</em>
+<br/>
+<br/>
 
 ```{r continuousVariable, message = FALSE, warning = FALSE, echo = FALSE }
 source("functionsToVisualize.R")
@@ -178,7 +189,10 @@ plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
                                ,targetVariable = "target")
 
 ```
-
+<br/>
+<br/>
+<br/>
+<br/>
 
 
 
