@@ -38,24 +38,49 @@ variablesName <- names(dataTrainWithNewFeatures)[which(!names(dataTrainWithNewFe
 continuous_variables <- listOfSeletedVariables$continuous
 discrete_variables <- listOfSeletedVariables$discrete
 dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
-
-
-#file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
-
 ```
 
 ## 1. Overview 
-This is a case study of machine learnings model using R programming.
-Used algorithms:
 
-- Logistic Regression
-- Decision Trees
-- Bagging with Random Forests
-- Boosting with AdaBoost
+<br/>
+<br/> 
+
+This is a case study of machine learning models (R programming) using credit default data.
+In this report you can find also some solutions about data cleaning, data enginerring or some methods how present data at charts using R programming. In this project, I try to illustrate the complete workflow (I indicate the script where you can find more R programming details).
+
+To solve the classification problem (customer is bad or good) I used some algorithms:
+
+- Logistic Regression,
+
+- Decision Trees,
+
+- Bagging with Random Forests,
+
+- Boosting with AdaBoost,
+
+<br/>
 
 
-### 1.1 Data
+  
+- **Session Info**
 
+```{r session_info, message = FALSE, warning = FALSE, echo = FALSE}
+sessionInfo()
+```
+
+
+- **How start**
+
+You can start with the `main.R` script.
+
+<br/>
+<br/>
+
+### 1.1 Dataset description
+
+Dataset used from **Kaggle Lending Club**. To import dataset it is needed to download a file <em>loan.csv</em> from this [website](https://www.kaggle.com/wendykan/lending-club-loan-data). This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. 
+
+Let's check how the number of bad customers has evolved at the time.
 
 ```{r dataset, message = FALSE, warning = FALSE, echo = FALSE}
 cowplot::plot_grid(plotlist = listOfPlotsTimeSeries)
@@ -72,8 +97,7 @@ cowplot::plot_grid(plotlist = listOfPlotsTimeSeries)
 ## 2. Models building
 
 ### 2.1 Logistic Regression
-<br/>
-<br/>
+
 
 #### 2.2 Using Information value (IV) and weight of evidence (Woe)   
 
@@ -269,4 +293,11 @@ summary(model_lr_woe)
 Lets evaluate the model `model_lr_woe` performance. To do that lets use a train and also test and valid dataset to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
 
 
+
+
+
+
+
+
+I think it still exists a better way to achieve more satisfying classification results. Maybe it depends on the time samples or the definition of the target. Maybe more work is needed at creating better new features from an existing dataset.
 
