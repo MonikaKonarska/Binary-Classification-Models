@@ -57,7 +57,7 @@ Machine learning models (in progress):
 You can start with the `main.R` script.
 Dataset used from **Kaggle Lending Club**. To import dataset it is needed to download a file <em>loan.csv</em> from this [website](https://www.kaggle.com/wendykan/lending-club-loan-data). 
 
-This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. To import data you can use `0a.importData.R` 
+This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. To import data you can use script `0a.importData.R` 
 
 
 
