@@ -1,4 +1,4 @@
-# Outliers detection and correlations 
+
 source("functions.R")
 
 removeOutliers <- function(data_set) {
