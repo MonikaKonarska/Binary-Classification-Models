@@ -1,3 +1,9 @@
+dataPath                          <<- file.path(getwd(), "data")
+saveResultsPath                   <<- file.path(getwd(), "dataResults")
+folderToSavePlots                 <<- file.path(getwd(), "plots")
+folderToSavecalculations          <<- file.path(getwd(), "calculations")
+folderToSavePlotsSelectedFeatures <<- file.path(folderToSavePlots, "selectedFeatures")
+
 source("0a.importData.R")
 source("0b.choose_time_series_to_modeling.R")
 source("1.data_cleaning.R")
@@ -17,7 +23,7 @@ save(dataTrainWithNewFeatures, file = file.path(dataPath, "dataTrainWithNewFeatu
 featureSelection()
 
 
-
+# render to Rmarkdown
 
 
 
