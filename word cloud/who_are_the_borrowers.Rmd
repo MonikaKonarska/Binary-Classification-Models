@@ -5,7 +5,18 @@ output: md_document
 
 ## *Let's get more information about the borrowers* 
 
-### **Word Cloud of borrowers employment** 
+&nbsp;
+
+### **Word cloud of types of job titles**
+
+To create Word Clouds is needed load these packages:
+
+- *tm*,
+- *wordcloud*,
+- *RColorBrewer*,
+
+&nbsp;
+
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE }
 library("tm")
 library("SnowballC")
@@ -13,68 +24,85 @@ library("wordcloud")
 library("RColorBrewer")
 library("tidyverse")
 library("data.table")
+library("cowplot")
 pathFunctions <- file.path(getwd(),"..", "code", "functions")
 dataPath <- file.path(getwd(), "..", "data")
+folderToSavePlots <- file.path(getwd(), "..", "plots")
 source(file.path(pathFunctions, "functions.R"))
 set.seed(1234)
 ```
 
-From data LC (from 2013-01-01 to 2015-06-30) selected samples of variable `empl_title`. Created three datasets (the sample of all borrowers, the sample of borrowers who didn't pay off loan and the sample of borrowers who paid off).   
+From data LC (from 2013-01-01 to 2015-01-01) selected samples of variable `empl_title`. Created two samples of the dataset:
+
+- the sample of borrowers who didn't pay off loan,
+- the sample of borrowers who paid off.  
+
+This dataset applies to customers who took out a loan for 36 months.
+A stable number of target was selected in dataset (from 2013-01 to 2015-01).&nbsp;
+These chart represents how the number of bad customers has changed over time.&nbsp; 
+&nbsp; 
+
+```{r timeSeriesPlot,  echo = FALSE, message = FALSE, warning = FALSE}
+load(file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
+cowplot::plot_grid(listOfPlotsTimeSeries$plotTargetInSelectedData)
+```
 
 
 ```{r prepareData, echo = FALSE, message = FALSE, warning = FALSE}
-
-
 data <- fread(file.path(dataPath, "loan.csv"))
 data <- setDF(data)
-
+data <- data %>% filter(term == "36 months") 
 data <- data %>% mutate(funded_loan_date = convert_date_from_month_year(issue_d),
                         earliest_cr_line_date = convert_date_from_month_year(earliest_cr_line),
                         last_credit_pull_date = convert_date_from_month_year(last_credit_pull_d)) 
 
-dataReduced <- data[which(data$funded_loan_date >= '2013-01-01' & data$funded_loan_date <= '2015-06-30'), ]
-
-dataReduced$target <- factor(case_when(dataReduced$loan_status == "Fully Paid"  ~ 0,
-                                       dataReduced$loan_status == "Charged Off" ~ 1,
-                                       dataReduced$loan_status == "Default Does not meet the credit policy. Status:Charged Off" ~ 1), levels = c(0, 1))
-
-dataReduced <- dataReduced[which(!is.na(dataReduced$target)), ]
-
-borrowesAll <- sample(x = dataReduced$emp_title, size = 50000 )
+dataReduced <- data[which(data$funded_loan_date >= '2013-01-01' & data$funded_loan_date <= '2015-01-01'), ]
+dataReduced$target <- case_when(dataReduced$loan_status == "Fully Paid"  ~ '0',
+                                dataReduced$loan_status == "Charged Off" ~ '1',
+                                dataReduced$loan_status == "Default Does not meet the credit policy. Status:Charged Off" ~ '1',
+                                TRUE ~ as.character(dataReduced$loan_status))
+  
+dataReduced <- dataReduced[which(dataReduced$target %in% c("0", "1")), ]
+dataReduced$target <- as.factor(dataReduced$target)
 borrowersWithDefault <- dataReduced[which(dataReduced$target == 1), "emp_title"]
 borrowersWithoutDefault <- dataReduced[which(dataReduced$target == 0), "emp_title"]  
 borrowersWithoutDefault <- sample(x = borrowersWithoutDefault, size = 30000)  
+purposesBorrowers <- dataReduced[, "purpose"]
+purposesBorrowers <- sample(x = purposesBorrowers, size = 40000)  
+
 ```
 
-Here the some examples of employment title.
+
+The some examples of employment title from the dataset:
+&nbsp;
+
 ```{r exampleOfEmps, echo = FALSE, message = FALSE, warning = FALSE}
-head(borrowesAll, 100)
+head(borrowersWithDefault, 20)
 ```
 
 
-### Converting the text file into a Corpus
+### **Converting the text file into a Corpus**
+
+It is needed to load the data as a [corpus](https://www.rdocumentation.org/packages/tm/versions/0.7-7/topics/Corpus)).
 
 ```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
-docsBorrowersAll <- Corpus(VectorSource(borrowesAll))
-docsBorrowersDefault <- Corpus(VectorSource(borrowersWithDefault))
+docsBorrowersDefault        <- Corpus(VectorSource(borrowersWithDefault))
 docsBorrowersWithoutDefault <- Corpus(VectorSource(borrowersWithoutDefault))
+docspurposesBorrowers       <- Corpus(VectorSource(purposesBorrowers))
 ```
 
 
-### Text cleaning
-Used function `tm_map()` from the `tm` package for processing text. It is some operations on the text:
+### **Text cleaning**
+
+Used function `tm_map()` from the `tm` package for processing text (some operations on the text):
 
 * strip unnecessary white space,  
-* convert everything to lower case,  
+
+* convert everything to lower case,
+
 * remove numbers and punctuation with the removeNumbers and removePunctuation arguments.
 
 ```{r cleaningText, echo = TRUE, message = FALSE, warning = FALSE}
-borrowesAll_tm <- tm_map(docsBorrowersAll, stripWhitespace)
-borrowesAll_tm <- tm_map(borrowesAll_tm, tolower)
-borrowesAll_tm <- tm_map(borrowesAll_tm, removeNumbers)
-borrowesAll_tm <- tm_map(borrowesAll_tm, removePunctuation)
-borrowesAll_tm <- tm_map(borrowesAll_tm, removeWords, stopwords('english'))
-
 docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault, stripWhitespace)
 docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, tolower)
 docsBorrowersDefault_tm <- tm_map(docsBorrowersDefault_tm, removeNumbers)
@@ -86,27 +114,55 @@ docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, tolower
 docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeNumbers)
 docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removePunctuation)
 docsBorrowersWithoutDefault_tm <- tm_map(docsBorrowersWithoutDefault_tm, removeWords, stopwords('english'))
+
+docspurposesBorrowers_tm <- tm_map(docspurposesBorrowers, stripWhitespace)
+docspurposesBorrowers_tm <- tm_map(docspurposesBorrowers_tm, tolower)
+docspurposesBorrowers_tm <- tm_map(docspurposesBorrowers_tm, removeNumbers)
+docspurposesBorrowers_tm <- tm_map(docspurposesBorrowers_tm, removePunctuation)
+docspurposesBorrowers_tm <- tm_map(docspurposesBorrowers_tm, removeWords, stopwords('english'))
 ```
 
 
-### Creating word clouds
+### **Creating word clouds**
 
-```{r clouds, echo = TRUE, message = FALSE, warning = FALSE}
+&nbsp;
 
+#### Word cloud of types of job titles (borrowers who paid off)
+
+```{r clouds1, echo = TRUE, message = FALSE, warning = FALSE}
 wordcloud (docsBorrowersWithoutDefault_tm,
            scale=c(5,0.5),
            max.words=200,
            random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+```
 
+&nbsp;
+
+#### Word cloud of types of job titles (borrowers who didn't pay off loan)
+
+```{r clouds2, echo = TRUE, message = FALSE, warning = FALSE}
 wordcloud (docsBorrowersDefault_tm,
-           scale=c(5,0.5),
-           max.words=200,
-           random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
-
-wordcloud (borrowesAll_tm,
            scale=c(5,0.5),
            max.words=200,
            random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
 ```
 
-## Conclusions 
+&nbsp;
+&nbsp;
+
+#### Word cloud of credit purpose
+
+```{r clouds_purpose, echo = TRUE, message = FALSE, warning = FALSE}
+
+wordcloud(docspurposesBorrowers_tm,
+           scale=c(5,0.5),
+           max.words=200,
+           random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+```
+
+
+## **Conclusions** 
+
+Using in R programming package *tm* and the word cloud generator package
+*wordcloud* help us to analyze texts and to quickly visualize the keywords as a word cloud. Word clouds add simplicity for reporting qualitative data. This is a really good communication tool - easy to understand.
+
