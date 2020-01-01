@@ -41,10 +41,9 @@ To solve the classification problem (customer is bad or good) I used some algori
 
 ### Results   
 
-Visualizations - training dataset: [more details here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/trainDataSetVisualization.html)
+[Visualizations - training dataset](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/code/Rmd/trainDataSetVisualization.html)
 
-Machine learning models (in progress):
-[more details here](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/Feature_selection_and_machine_learning_models.html)
+[Machine learning models (in progress)](https://htmlpreview.github.io/?https://github.com/MonikaKonarska/creditScoring/blob/master/code/Rmd/Feature_selection_and_machine_learning_models.html)
 
 
 [Let's get more information about the borrowers](https://github.com/MonikaKonarska/creditScoring/tree/master/word%20cloud)
