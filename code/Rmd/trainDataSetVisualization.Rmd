@@ -12,6 +12,9 @@ output:
 ---
 
 ```{r readLibriaries, echo = FALSE, message=FALSE, warning=FALSE}
+dataPath     <<- file.path(".." ,"..", "data")
+functionPath <<- file.path("..", "functions")
+
 library(ggplot2)
 library(gridExtra)
 library(grid)
@@ -21,9 +24,8 @@ library(DataExplorer)
 library(networkD3)
 library(rmarkdown)
 library(knitr)
-source("functionsToVisualize.R")
+source(file.path(functionPath, "functionsToVisualize.R"))
 
-dataPath <- file.path(getwd(), "data")
 load(file.path(dataPath, "dataToModeling.Rdata"))
   variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
   variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
@@ -33,6 +35,9 @@ load(file.path(dataPath, "dataToModeling.Rdata"))
 <br/>
 
 ## <strong><em>1. Before creates new features in the training dataset</em></strong>
+
+<br/>
+<br/>
 
 ```{r someInformationFromTrainDataSet, message = FALSE, warning = FALSE, echo = FALSE}
 kable(t(introduce(dataTrain)), row.names = TRUE, col.names = "", format.args = list(big.mark = ","))
@@ -65,8 +70,9 @@ plot_histogram(dataTrain)
 <br/>
 
 ```{r densityPlots, message = FALSE, warning = FALSE, echo = FALSE }
-source("3.feature_engineering.R")
-dataTrainWithNewFeatures <<- featurEngineering()
+
+source(file.path(functionPath, "..", "3_feature_engineering.R"))
+dataTrainWithNewFeatures <- featurEngineering(data = dataTrain)
 
 numericVariables <- names(dataTrainWithNewFeatures)[map_lgl(dataTrainWithNewFeatures, is.numeric)] 
 factorVariables <- names(dataTrainWithNewFeatures)[map_lgl(dataTrainWithNewFeatures, is.factor)]
@@ -74,6 +80,7 @@ factorVariables <- names(dataTrainWithNewFeatures)[map_lgl(dataTrainWithNewFeatu
 visualizeDensityVariablesGroupedByCategories(data = dataTrainWithNewFeatures, 
                                              names_numeric_variables = numericVariables, 
                                              names_variable_to_group = "target") 
+
 ```
 
 <br/>
@@ -113,37 +120,37 @@ plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "delinq_2yrs_binary",
+                               variable = "if_delinq_in2yrs",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "deninq_in_last_year_cat",
+                               variable = "if_delinq_in_last_year",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "inq_last_6mths_cat",
+                               variable = "inq_last_6mths_grouped",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "inq_last_6mths_catMore",
+                               variable = "if_employment_more_10years",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "if_inq_last_6mths_cat",
+                               variable = "if_purpose_debt_consolidation",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "pub_rec_value_binary",
+                               variable = "if_ever_pub_rec",
                                timeVariable = "quarter")
 
 plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
                                targetVariable = "target",
-                               variable = "pub_rec_value_binary",
+                               variable = "if_delinq_ever",
                                timeVariable = "quarter")
 
 ```
@@ -156,7 +163,7 @@ plotDiscreteVariableWithTarget(data = dataTrainWithNewFeatures,
 <br/>
 
 ```{r continuousVariable, message = FALSE, warning = FALSE, echo = FALSE }
-source("functionsToVisualize.R")
+source(file.path(functionPath,"functionsToVisualize.R"))
 
 plotContinuousVariableWithTarget(data = dataTrainWithNewFeatures
                                ,variable = "loan_amnt"
