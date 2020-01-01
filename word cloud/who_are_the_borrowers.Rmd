@@ -13,7 +13,9 @@ library("wordcloud")
 library("RColorBrewer")
 library("tidyverse")
 library("data.table")
-source("functions.R")
+pathFunctions <- file.path(getwd(),"..", "code", "functions")
+dataPath <- file.path(getwd(), "..", "data")
+source(file.path(pathFunctions, "functions.R"))
 set.seed(1234)
 ```
 
@@ -22,7 +24,7 @@ From data LC (from 2013-01-01 to 2015-06-30) selected samples of variable `empl_
 
 ```{r prepareData, echo = FALSE, message = FALSE, warning = FALSE}
 
-dataPath <- file.path(getwd(), "data")
+
 data <- fread(file.path(dataPath, "loan.csv"))
 data <- setDF(data)
 
