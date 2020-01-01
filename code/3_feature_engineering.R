@@ -1,6 +1,6 @@
 library(tidyverse)
 library(reshape2)
-source("functions.R")
+source(file.path(functionPath,"functions.R"))
 load(file.path(dataPath, "dataToModeling.Rdata"))
 
 featurEngineering <- function(data) {

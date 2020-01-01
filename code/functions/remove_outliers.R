@@ -1,5 +1,5 @@
 
-source("functions.R")
+source(file.path(functionPath,"functions.R"))
 
 removeOutliers <- function(data_set) {
   library(purrr)

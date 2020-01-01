@@ -3,8 +3,8 @@ library(reshape)
 library(lubridate)
 library(openxlsx)
 library(cowplot)
-source("functions.R")
-source("functions_to_feature_selection.R")
+source(file.path(functionPath,"functions.R"))
+source(file.path(functionPath,"functions_to_feature_selection.R"))
 
 chooseTimeSeriesToModeling <- function() {
   
@@ -70,7 +70,7 @@ chooseTimeSeriesToModeling <- function() {
     scale_y_continuous(limits = c(0.15, 0.35), labels = scales::percent)+
     theme(plot.title = element_text(hjust = 0.5))
   
-  minDateInDataSet <- as.Date('2012-10-01')
+  minDateInDataSet <- as.Date('2013-01-01')
   maxDateInDataSet <- as.Date('2014-12-31')
   
   plotBadRateSelectedData <- defaultRates %>% 
@@ -107,11 +107,13 @@ chooseTimeSeriesToModeling <- function() {
   listOfPlotsTimeSeries[["plotTargetInSelectedData"]] <- plotTargetInSelectedData
   save_plot_jpg(path = folderToSavePlots, plot = plotTargetsInformation, nameOfPlot = "plotTargetsInformation")
   
-  dataToTranTestValid <- data %>%
-    dplyr::filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSet %m-% years(1))
+  maxDateInDataSetForTrainTestValid <- max(seq((maxDateInDataSet %m-% years(1)), by = "1 month", length = 7))
   
+  dataToTranTestValid <- data %>%
+    dplyr::filter(funded_loan_date >= minDateInDataSet & funded_loan_date <= maxDateInDataSetForTrainTestValid)
+    
   dataNew <- data %>%
-    dplyr::filter(funded_loan_date > minDateInDataSet %m+% years(1) & funded_loan_date <= maxDateInDataSet) 
+    dplyr::filter(funded_loan_date >= maxDateInDataSetForTrainTestValid & funded_loan_date <= maxDateInDataSet) 
   
   save(dataToTranTestValid, file = file.path(dataPath, "dataToTranTestValid.Rdata"))
   save(dataNew, file = file.path(dataPath, "dataNew.Rdata"))

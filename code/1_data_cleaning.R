@@ -2,7 +2,7 @@ library(tidyverse)
 library(reshape2)
 library(reshape)
 library(scales)
-source("functions.R")
+source(file.path(functionPath, "functions.R"))
 
 dataCleaning <- function() {
   

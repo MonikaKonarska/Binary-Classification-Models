@@ -1,7 +1,7 @@
 library(tidyverse)
 library(Information)
 library(corrplot)
-source("functions_to_feature_selection.R")
+source(file.path(functionPath, "functions_to_feature_selection.R"))
 
 featureSelection <- function() {
   
