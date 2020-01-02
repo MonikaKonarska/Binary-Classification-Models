@@ -83,7 +83,7 @@ head(borrowersWithDefault, 20)
 
 ### **Converting the text file into a Corpus**
 
-It is needed to load the data as a [corpus](https://www.rdocumentation.org/packages/tm/versions/0.7-7/topics/Corpus)).
+It is needed to load the data as a [corpus](https://www.rdocumentation.org/packages/tm/versions/0.7-7/topics/Corpus).
 
 ```{r corpus, echo = TRUE, message = FALSE, warning = FALSE }
 docsBorrowersDefault        <- Corpus(VectorSource(borrowersWithDefault))

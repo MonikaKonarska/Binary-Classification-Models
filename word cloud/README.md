@@ -42,7 +42,7 @@ The some examples of employment title from the dataset:  
 ### **Converting the text file into a Corpus**
 
 It is needed to load the data as a
-[corpus](https://www.rdocumentation.org/packages/tm/versions/0.7-7/topics/Corpus)).
+[corpus](https://www.rdocumentation.org/packages/tm/versions/0.7-7/topics/Corpus).
 
     docsBorrowersDefault        <- Corpus(VectorSource(borrowersWithDefault))
     docsBorrowersWithoutDefault <- Corpus(VectorSource(borrowersWithoutDefault))
