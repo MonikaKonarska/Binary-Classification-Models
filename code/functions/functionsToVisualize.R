@@ -377,3 +377,40 @@ visualizeDensityVariablesGroupedByCategories <- function(data = NA,
   all_plots <- grid_arrange_shared_legend(plotlist = list_of_plots, ncol = 3)
   return(all_plots)
 }
+
+show_accuracyfor_cutoffs <- function( train, test, valid = NA, predict, actual )
+{
+  library(data.table)
+  library(caret)
+  cutoff <- seq( .1, .35, by = .05 )
+  
+  table_of_accuracy <- data.frame(cutoff = cutoff,
+                                  train  = NA,
+                                  test   = NA )
+  if(!is.na(valid)) {table_of_accuracy$valid = NA}
+  
+  for (c in cutoff) {
+    cm_train <- confusionMatrix(table( as.numeric( train[[predict]] > c ), train[[actual]] ))
+    cm_test  <- confusionMatrix(table( as.numeric( test[[predict]]  > c ), test[[actual]] ))
+    if(!is.na(valid)) {
+      cm_valid <- confusionMatrix(table( as.numeric( valid[[predict]]  > c ), valid[[actual]] )) }
+    
+    table_of_accuracy[which(table_of_accuracy$cutoff == c), "train"] <- cm_train$overall[["Accuracy"]]
+    table_of_accuracy[which(table_of_accuracy$cutoff == c), "test"] <- cm_test$overall[["Accuracy"]]
+    if(!is.na(valid)) {
+      table_of_accuracy[which(table_of_accuracy$cutoff == c), "valid"] <- cm_valid$overall[["Accuracy"]]
+    }
+  }
+  
+  accuracy_long <- gather(table_of_accuracy, "data", "accuracy", -1 )
+  title <- if(!is.na(valid)){"Train/Test/Valid Accuracy for Different Cutoff"} else {"Train/Test Accuracy for Different Cutoff"}
+  
+  plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+    geom_line( size = 1 ) + geom_point( size = 3 ) +
+    scale_y_continuous( label = percent ) +
+    ggtitle(title)
+  
+  return( list( data = table_of_accuracy, plot = plot ) )
+}
+
+
