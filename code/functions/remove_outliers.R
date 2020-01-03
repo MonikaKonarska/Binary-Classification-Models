@@ -1,7 +1,7 @@
 
 source(file.path(functionPath,"functions.R"))
 
-removeOutliers <- function(data_set) {
+removeOutliers <- function(data_set, print_results = FALSE) {
   library(purrr)
   numeric_columns <- names(data_set)[map_lgl(data_set, is.numeric)]
   removedOtliersFromTrainingData <- integer(length = length(numeric_columns))
@@ -13,7 +13,7 @@ removeOutliers <- function(data_set) {
     removedOtliersFromTrainingData[[variable]] <- number_otliers
     data_set <- data_set[!outliers, ]
   }
-  print(removedOtliersFromTrainingData)
+  if(print_results){print(removedOtliersFromTrainingData)}
   return(data_set)
 }
 
