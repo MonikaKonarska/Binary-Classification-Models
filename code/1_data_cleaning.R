@@ -24,6 +24,7 @@ dataCleaning <- function() {
   
   dataToTranTestValid_cleaned <- dataToTranTestValid_cleaned[which(!dataToTranTestValid_cleaned$home_ownership %in% c("ANY", "NONE", "OTHER")), ]
   save(dataToTranTestValid_cleaned, file = file.path(dataPath, "dataToTranTestValid_cleaned.RData"))
+  save(structureData, file = file.path(folderToSavecalculations, "structureData.RData"))
 }
 
 

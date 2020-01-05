@@ -378,11 +378,11 @@ visualizeDensityVariablesGroupedByCategories <- function(data = NA,
   return(all_plots)
 }
 
-show_accuracy_for_cutoffs <- function( train, test, valid = NA, predict, actual )
+show_accuracy_for_cutoffs <- function( train, test, valid = NA, predict, actual, cutoffmax , cutoffmin)
 {
   library(data.table)
   library(caret)
-  cutoff <- seq( .1, .35, by = .05 )
+  cutoff <- seq( cutoffmin, cutoffmax, by = .05 )
   
   table_of_accuracy <- data.frame(cutoff = cutoff,
                                   train  = NA,

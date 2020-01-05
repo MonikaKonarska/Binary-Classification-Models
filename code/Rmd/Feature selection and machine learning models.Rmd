@@ -1,63 +1,50 @@
 ---
-title: "Feature selection and machine learning models"
-output: html_document
+title: "Machine learning models in R"
+output: 
+  html_document:
+  toc: true
+  toc_float: true
 ---
+
+```{css, echo = FALSE}
+h1.title {
+  color: #003333;
+}
+h1 {
+  color: #003333;
+}
+h2 {
+  color: #660000;
+}
+h3 {
+  color: #660000;
+}
+h4 {
+  color: #FF9933;
+}
+```
 
 ```{r loadInformations, message = FALSE, warning = FALSE, echo = FALSE}
 library(cowplot)
-library(kableExtra)
-library(caret)
-library(MASS)
-library(ROCR)
-library(dplyr)
 library(ggplot2)
 library(formattable)
 library(ggthemes)
+library(kableExtra)
+library(dplyr)
+library(caret)
+library(ROCR)
 library(pROC)
 
-mainPath                          <<- file.path(getwd(), "..", "..")
-dataPath                          <<- file.path(mainPath, "data")
-folderToSavePlots                 <<- file.path(mainPath, "plots")
-folderToSavecalculations          <<- file.path(mainPath, "calculations")
-folderToSavePlotsSelectedFeatures <<- file.path(folderToSavePlots, "selectedFeatures")
-folderToSavecalculations          <<- file.path(folderToSavePlots, "..", "calculations")
-functionPath                      <<- file.path("..", "functions")
+source(file.path(getwd(), "..", "definition_of_file_paths.R"))
 source(file.path(functionPath, "functions.R"))
 source(file.path(functionPath, "functionsToVisualize.R"))
 source(file.path(functionPath, "remove_outliers.R"))
 source(file.path(functionPath, "..", "3_feature_engineering.R"))
-
-# dataPath                          <- file.path(getwd(), "data")
-# folderToSavePlots                 <- file.path(getwd(), "plots")
-# folderToSavecalculations          <- file.path(getwd(), "calculations")
-# folderToSavePlotsSelectedFeatures <- file.path(folderToSavePlots, "selectedFeatures")
-# folderToSavecalculations          <- file.path(folderToSavePlots, "..", "calculations")
-
-load(file = file.path(folderToSavecalculations, "resultsOfIV_allvariables.Rdata"))
-load(file = file.path(folderToSavecalculations, "iv_in_variable_bins_plots.Rdata"))
-load(file = file.path(folderToSavecalculations, 'iVForSelectedcontinuousVariablesWithChoosenBins.Rdata'))
-load(file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
-load(file.path(folderToSavecalculations, "categorisationVariableParametrs.Rdata"))
-load(file = file.path(dataPath, "dataNew.Rdata"))
-load(file = file.path(dataPath, "dataTrainWithNewFeatures.Rdata"))
-load(file = file.path(folderToSavecalculations, "own_choosen_variables_using_owe.Rdata")) ##dane do modelu logistycznego, gdzie sama wybralam bins do 
-load(file = file.path(folderToSavecalculations, "plots_iv_in_time_for_choosen_variables.Rdata"))
-load(file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
-  variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
-  variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
-  
-groupedVariables <- c("quarter", "month")
-variablesName <- names(dataTrainWithNewFeatures)[which(!names(dataTrainWithNewFeatures) %in% groupedVariables)]
-continuous_variables <- listOfSeletedVariables$continuous
-discrete_variables <- listOfSeletedVariables$discrete
-dataTrainWithNewFeatures <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
 ```
-
-
 <br/>
 <br/>
 
-### 1.1 Dataset description
+## Dataset description
 
 Dataset used from **Kaggle Lending Club**. To import dataset it is needed to download a file <em>loan.csv</em> from this [website](https://www.kaggle.com/wendykan/lending-club-loan-data). This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. 
 
@@ -65,26 +52,89 @@ Let's check how the number of bad customers has changed over time.
 
 ```{r dataset, message = FALSE, warning = FALSE, echo = FALSE}
 cowplot::plot_grid(plotlist = listOfPlotsTimeSeries)
-
 ```
 <br/>
+<br/>
 
-### 1.2 Cleaning data
+## Cleaning data
 
-### 1.3 Feature engineering
+Summary of the data structure:
+
+```{r data_cleaning_informations, message = FALSE, warning = FALSE, echo = FALSE}
+load(file.path(folderToSavecalculations, "structureData.RData"))
+
+kable(structureData) %>%
+  kable_styling() %>%
+  scroll_box(width = "80%", height = "400px")
+```
 
 
+To clean data, these conditions were used:
 
-## 2. Models building
+- delete variable if missing values are more than 80%,
+- delete variable (type: character) if a number of unique values are more than 30.
 
-### 2.1 Logistic Regression
+Defined variables (`variablesFromFeature`, `variablesAnotherToDelete`) that were not used in the modeling process because they were not significant in the prediction.
 
+```{r variables_not_used, message = FALSE, warning = FALSE, echo = TRUE, eval=FALSE, out.width = "50%"}
+structureData <<- describe_variables(dataToTranTestValid)
+levelOfNA <- 0.80
+maxUniqueValues <- 30
+  
+variablesWithalotNA         <- structureData$variable[which(structureData$p_numberOfNa >= levelOfNA )]
+variablesWithalotUniqueText <- structureData$variable[ which(structureData$type == 'character' & structureData$uniqueValues > maxUniqueValues)]
+  
+variablesWithOneValue       <- structureData$variable[which(structureData$uniqueValues == 1 )]
+variablesToRemove           <- c(variablesWithalotNA, variablesWithalotUniqueText, variablesWithOneValue)
+variablesFromFeature        <<- c("sub_grade", "grade", "int_rate", "installment", "total_pymnt", "total_pymnt_inv", "total_rec_prncp", "total_rec_int", "total_rec_late_fee", "recoveries", "collection_recovery_fee", "last_pymnt_amnt", "initial_list_status")
 
-#### 2.2 Using Information value (IV) and weight of evidence (Woe)   
-
-- **Feature selecion using the Information value (IV) and the weight of evidence (Woe)**
+variablesAnotherToDelete    <<- c("id", "member_id", "issue_d", "loan_status", "funded_amnt_inv", "term", "verification_status", "funded_amnt", "group", "last_credit_pull_d", "collections_12_mths_ex_med", "acc_now_delinq")
+```
 
 <br/>
+<br/>
+
+## Feature engineering
+
+```{r new_features, message = FALSE, warning = FALSE, echo = TRUE, eval=FALSE, out.width = "50%"}
+dataTrainWithNewFeatures <- data %>%
+    mutate(if_delinq_in2yrs = factor(case_when(delinq_2yrs == 0 ~ 0, TRUE ~ 1), levels = c(0, 1)),
+           
+           if_delinq_in_last_year = factor(case_when(is.na(mths_since_last_delinq) ~ "LACK",
+                                               mths_since_last_delinq <= 12 ~ "1",
+                                               TRUE ~ "0")),
+           if_delinq_ever = factor(case_when(is.na(mths_since_last_delinq) ~ 0, TRUE ~ 1)),
+           if_inq_in_last_6moths = factor(case_when(inq_last_6mths == "0" ~ 0, TRUE ~ 1)),
+           inq_last_6mths_grouped = factor(case_when(inq_last_6mths >= 4 ~ "4+",
+                                                      TRUE ~ as.character(inq_last_6mths)), levels = c("0","1","2","3","4+")),
+           if_ever_pub_rec = factor(case_when(pub_rec == 0 ~ 0, TRUE ~1), levels = c(0,1)),
+           if_purpose_debt_consolidation = factor(case_when(purpose == 'debt_consolidation' ~ 1, TRUE ~ 0), levels = c(0,1)),
+           if_employment_more_10years = factor(case_when(emp_length == '10+ years' ~ 1, TRUE ~ 0)),
+           month = substr(x = funded_loan_date, start = 1, stop = 7),
+           month = factor(month, levels = sort(unique(month))),
+           number_of_quarter = lubridate::quarter(funded_loan_date),
+           year_of_funded_loan = lubridate::year(funded_loan_date),
+           quarter = paste(year_of_funded_loan, "Q", number_of_quarter, sep = "")) %>%
+    dplyr::select(-c(funded_loan_date, earliest_cr_line_date, last_credit_pull_date, number_of_quarter, year_of_funded_loan, delinq_2yrs, mths_since_last_major_derog, mths_since_last_delinq, inq_last_6mths, pub_rec))
+  
+  dataTrainWithNewFeatures <- changeCharacter2FactorVariableWithLackGroup(data = dataTrainWithNewFeatures,
+                                                                          typeOfLack = "LACK")
+
+```
+
+<br/>
+<br/>
+
+## Models building
+
+## Logistic Regression
+
+### Using Information value (IV) and weight of evidence (Woe)   
+
+<br/>
+
+#### **Feature selecion using the Information value (IV) and the weight of evidence (Woe)**
+
 Using measure <em>Information value</em> you can select important variables in a predictive model.
 <p>This measure helps to rank variables on the basis of their importance.</p> 
 
@@ -111,8 +161,6 @@ When information value is less than 0.02 means that it is not useful for predict
                                                                 style = x ~ style(color = ifelse(x>0.02, "green", "red")))))
 
 ```
-</br>
-
 
 The weight of evidence describes as a measure of the separation of good and bad borrowers. Bad borrowers are customers who defaulted on a loan. Instead of good borrowers are customers who paid back a loan. Analyzing results from these <em>Woe plots</em> It is important to remember that:
 
@@ -124,12 +172,16 @@ Here some plots about Woe for each independent variable:
 </br>
 
 ```{r woe, message = FALSE, warning = FALSE, echo = FALSE}
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[1:4])
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[5:8])
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[9:12])
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:16])
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[17:20])
-    cowplot::plot_grid(plotlist =  results$plotsOfWoe[21:23])
+results$plotsOfWoe <- results$plotsOfWoe[which(names(results$plotsOfWoe) !="month")]
+
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[1:3], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[4:6], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[7:9], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[10:12], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[13:15], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[16:18], nrow = 1)
+    cowplot::plot_grid(plotlist =  results$plotsOfWoe[19:21], nrow = 1)
+    
 ```
 
 We can choose the right prospective variables to build a logistic regression model when we use information about measure IV and Woe (is monotonic or not for a variable). These variables fulfill the mentioned conditions:
@@ -143,7 +195,7 @@ listOfSeletedVariables$discrete
 Lets see how <em>IV</em> measure changes over time. How strong this measure is different over time ? 
 There are times in which a decrease in value <em>IV</em> is noticeable. It can be seen that the decline usually occurs from 2012 Q4. Greater <em>IV</em> stabilization has been visible since 2013 Q2.
 
-```{r plots_iv_in_time_for_choosen_variables, message = FALSE, warning = FALSE, echo = FALSE}
+```{r plots_iv_in_time_for_choosen_variables, message = FALSE, warning = FALSE, echo = FALSE, out.width = "70%"}
 cowplot::plot_grid(plotlist = plots_iv_in_time_for_choosen_variables)
 ```
 </br>
@@ -152,17 +204,14 @@ cowplot::plot_grid(plotlist = plots_iv_in_time_for_choosen_variables)
 Lets see how the <em>IV</em> measure depends on the number of bins for each selected, continuous variable.
 It can be seen that the <em>IV</em> value for the number of bins less than or equal to 3 has a small IV value. However, these changes for the next number of the bins and the <em>IV</em> measure increases.
 </br>
-```{r plots_of_iv_and_bins, message = FALSE, warning = FALSE, echo = FALSE}
+```{r plots_of_iv_and_bins, message = FALSE, warning = FALSE, echo = FALSE, out.width = "70%"}
 cowplot::plot_grid(plotlist = plots_of_iv_and_bins)
-
 ```
 
 </br>
 </br>
 
-- **Coding selected variables using the value of the weight of evidence (Woe)**
-
-</br>
+#### **Coding selected variables using the value of the weight of evidence (Woe)**
 
 Weight of evidence (WOE) coding of a nominal or discrete variable is widely used when preparing predictors for usage in binary logistic regression models. To build logistic regression model we can use Woe information. Here the example for <em>tot_cur_bal</em> variable and the results of coding.
 
@@ -170,8 +219,6 @@ Weight of evidence (WOE) coding of a nominal or discrete variable is widely used
 informationTableSelectedVariables$tot_cur_bal %>%
   formattable(list(`WOE` = color_bar("lightgreen")))
 ```
-
-</br>
 
 
 ```{r code_woe, message = FALSE, warning = FALSE, echo = FALSE }
@@ -185,8 +232,6 @@ dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(
                                                   home_ownership == "RENT" ~ 0.17447816)))
 ```
 
-</br>
-</br>
 
 ```{r table_woe_variables, message = FALSE, warning = FALSE, echo = FALSE}
 dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
@@ -194,8 +239,6 @@ kable(head(dataSetWithVariablesCodedWoe, 5)) %>%
   kable_styling() %>%
   scroll_box(width = "100%", height = "300px")
 ```
-
-</br>
 </br>
 
 The table of percentage of the target in train dataset:
@@ -215,12 +258,10 @@ dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
 ```
 
 </br>
+
+#### **Correlations between independent variables**
+
 </br>
-
-- **Correlations between independent variables**
-
-</br>
-
 Corrplot:
 
 ```{r corrplot, message = FALSE, warning = FALSE, echo = FALSE}
@@ -232,10 +273,7 @@ corrplot::corrplot(correlations_independent_variables_coded_woe)
 ```
 
 </br>
-
 Correlation matrix:
-
-</br>
 
 ```{r corrmatrix, message = FALSE, warning = FALSE, echo = FALSE }
 correlations_independent_variables_coded_woe %>%
@@ -258,7 +296,7 @@ highly_correlations_variables_woe <- caret::findCorrelation(correlation_matrix_n
 </br>
 </br>
 
-#### 2.2 Build logistic regression models
+## Another logistic regression models
 
 The first logistic regression model used all the choosen independent variables (annual_inc_woe, dti_woe, total_rev_hi_lim_woe, revol_util_woe, total_acc_woe, home_ownership_woe)
 Let’s name it *full_model_lr_woe*. Summary of this model below:
@@ -313,8 +351,7 @@ valid_predictions <- dataValidWithVariablesCodedWoe['target']
 
 </br>
 
-##### Stepwise to choose the best logistic regression model (variables coding woe)
-</br>
+### Stepwise to choose the best logistic regression model (variables coding woe)
 
 ```{r stepwise_model_lr_woe, message = FALSE, warning = FALSE, echo = TRUE, include = FALSE}
 null_model_lr_woe <- glm(target ~ 1, data = dataSetWithVariablesCodedWoe, family = binomial(link = "logit"))
@@ -329,59 +366,80 @@ summary(step_model_lr_woe)
 ```
 </br>
 
-ROC curve
+Lets evaluate the model performance. To do that lets use the testing and validation datasets to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
 
-</br>
+### ROC curve
 
-```{r the_best_model_woe_plots, message = FALSE, warning = FALSE, echo = FALSE}
-train_predictions$step_model_lr_woe_pred <- predict(step_model_lr_woe, dataSetWithVariablesCodedWoe, type = "response")
-test_predictions$step_model_lr_woe_pred  <- predict(step_model_lr_woe, dataTestWithVariablesCodedWoe,  type = "response")
-valid_predictions$step_model_lr_woe_pred <- predict(step_model_lr_woe, dataValidWithVariablesCodedWoe, type = "response")
+```{r the_best_model_woe_plots, message = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
+train_predictions$step_model_lr_woe_pred <- predict(full_model_lr_woe, dataSetWithVariablesCodedWoe,   type = "response")
+test_predictions$step_model_lr_woe_pred  <- predict(full_model_lr_woe, dataTestWithVariablesCodedWoe,  type = "response")
+valid_predictions$step_model_lr_woe_pred <- predict(full_model_lr_woe, dataValidWithVariablesCodedWoe, type = "response")
 
-plot.roc(train_predictions$target, train_predictions$step_model_lr_woe_pred, col = "red", main="ROC Train dataset",
+plot.roc(train_predictions$target, train_predictions$step_model_lr_woe_pred, col = "red", main="ROC training data",
          percent = TRUE, print.auc = TRUE)
 
-plot.roc(test_predictions$target, test_predictions$step_model_lr_woe_pred, col = "red", main="ROC Test dataset",
+plot.roc(test_predictions$target, test_predictions$step_model_lr_woe_pred, col = "red", main="ROC testing data",
          percent = TRUE, print.auc = TRUE)
 
-plot.roc(valid_predictions$target, valid_predictions$step_model_lr_woe_pred, col = "red", main="ROC Valid dataset",
+plot.roc(valid_predictions$target, valid_predictions$step_model_lr_woe_pred, col = "red", main="ROC validation data",
          percent = TRUE, print.auc = TRUE)
-
 ```
 </br>
 
 In the current case, both distributions are slight skewed to the left: 
 
+```{r plot_score_glm_woe, message = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
+ggplot(train_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The training dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
+
+ggplot(test_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The testing dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
+
+ggplot(valid_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The validation dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
+
+```
 </br>
 
-```{r plot_score_glm_woe, message = FALSE, warning = FALSE, echo = FALSE}
-p_score_train <- ggplot(train_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Train dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
+### Cut off point
 
-p_score_test <- ggplot(test_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Test dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
-
-p_score_valid <- ggplot(valid_predictions, aes(step_model_lr_woe_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Valid dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
-
-cowplot::plot_grid(p_score_train, p_score_test, p_score_valid)
-```
+When using the model to actually predict who is the bad customer a *cut-off point* has to be defined.
+Confusion Matrix allows the easier observation of some classification properties (e.g. cost incurred in case of incorrect classification).
 
 
 The cut-off point of 0.25 seems to be the best.
 </br>
+
+
+```{r confusionMatrix_glm, message = FALSE, warning = FALSE, echo = FALSE}
+accuracy_info <- show_accuracy_for_cutoffs(train = train_predictions,
+                                           test = test_predictions,
+                                           valid = valid_predictions,
+                                           predict = "step_model_lr_woe_pred",
+                                           actual = "target",
+                                           cutoffmax  = 0.35,
+                                           cutoffmin = 0.1)
+accuracy_info$plot
+```
+
+
+```{r cm, message = FALSE, warning = FALSE, echo = FALSE}
+confusionMatrix(table( as.numeric( train_predictions$step_model_lr_woe_pred > 0.25 ), train_predictions$target ))
+confusionMatrix(table( as.numeric( test_predictions$step_model_lr_woe_pred > 0.25 ), test_predictions$target ))
+confusionMatrix(table( as.numeric( valid_predictions$step_model_lr_woe_pred > 0.25 ), valid_predictions$target ))
+```
 
 It's not possible to reduce the False Negative  to 0.25 However at a cost of a few extra False Positives can be found.
 The Kappa index of agreement tells how much better, or worse, this classifier is than what would be expected by random chance.
@@ -393,20 +451,10 @@ Kappa index for this logistic regression classifier means that this classifier i
 
 This not sounds good. 
 
-```{r confusionMatrix_glm, message = FALSE, warning = FALSE, echo = FALSE}
-accuracy_info <- show_accuracy_for_cutoffs( train = train_predictions, test = test_predictions, valid = valid_predictions,
-                                     predict = "step_model_lr_woe_pred", actual = "target" )
-
-confusionMatrix(table( as.numeric( train_predictions$step_model_lr_woe_pred > 0.25 ), train_predictions$target ))
-confusionMatrix(table( as.numeric( test_predictions$step_model_lr_woe_pred > 0.25 ), test_predictions$target ))
-confusionMatrix(table( as.numeric( valid_predictions$step_model_lr_woe_pred > 0.25 ), valid_predictions$target ))
-```
 <br/>
 <br/>
 
-#### Another logistic regression models
-
-<br/>
+## Another logistic regression models (without woe)
 
 Corrplot all numeric independent variables in the training dataset:
 
@@ -449,7 +497,6 @@ dataValid <- dataValid %>%
   ) %>%
   dplyr::select(-c( "purpose", "home_ownership", "inq_last_6mths_grouped", "emp_length","if_delinq_ever", highly_correlated))
 
-
 dataTrainWithNewFeatures <- dataTrainWithNewFeatures %>%
   mutate(is_mortgage = case_when(home_ownership == 'MORTGAGE' ~ 1, TRUE ~ 0),
          is_totalrevhilim_morethan_38700 = case_when(total_rev_hi_lim >= 38700 ~ 1, TRUE ~ 0),
@@ -462,7 +509,6 @@ dataTrainWithNewFeatures <- dataTrainWithNewFeatures %>%
 ```
 
 ```{r another_glm_stepwise, message = FALSE, warning = FALSE, echo = TRUE, eval=FALSE}
-
 model_glm <- glm(target~.,
                  data = dataTrainWithNewFeatures,
                  family = binomial(link = "logit"))
@@ -470,12 +516,10 @@ null_model_glm <- glm(target ~ 1, data = dataTrainWithNewFeatures, family = bino
 
 step_model_glm <- step(null_model_glm, scope = list(lower = null_model_glm, upper = model_glm),
                           direction = "forward")
-
 ```
 
 
-```{r another_glm_predictions, message = FALSE, warning = FALSE, echo = FALSE}
-
+```{r another_glm_predictions, message = FALSE, warning = FALSE, echo = FALSE, out.width = "50%"}
 model_glm_after_step <- glm(target ~ annual_inc + revol_util + if_inq_in_last_6moths + dti + 
     tot_cur_bal + no_information_emplength + total_acc + open_acc + 
     total_rev_hi_lim + loan_amnt + if_delinq_in_last_year + 
@@ -487,138 +531,65 @@ train_predictions$model_glm_after_step_pred <- predict(model_glm_after_step, dat
 test_predictions$model_glm_after_step_pred  <- predict(model_glm_after_step, dataTest,  type = "response") 
 valid_predictions$model_glm_after_step_pred <- predict(model_glm_after_step, dataValid, type = "response")
 
-
-plot.roc(train_predictions$target, train_predictions$model_glm_after_step_pred, col = "red", main="ROC Train dataset",
+plot.roc(train_predictions$target, train_predictions$model_glm_after_step_pred, col = "red", main="ROC training data",
          percent = TRUE, print.auc = TRUE)
 
-plot.roc(test_predictions$target, test_predictions$model_glm_after_step_pred, col = "red", main="ROC Test dataset",
+plot.roc(test_predictions$target, test_predictions$model_glm_after_step_pred, col = "red", main="ROC testing data",
          percent = TRUE, print.auc = TRUE)
 
-plot.roc(valid_predictions$target, valid_predictions$model_glm_after_step_pred, col = "red", main="ROC Valid dataset",
+plot.roc(valid_predictions$target, valid_predictions$model_glm_after_step_pred, col = "red", main="ROC validation data",
          percent = TRUE, print.auc = TRUE)
 
-
-p_score_train <- ggplot(train_predictions, aes(model_glm_after_step_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Train dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
-
-p_score_test <- ggplot(test_predictions, aes(model_glm_after_step_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Test dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
-
-p_score_valid <- ggplot(valid_predictions, aes(model_glm_after_step_pred, color = target ) ) +
-  geom_density( size = 1 ) +
-  ggtitle( "Valid dataset's Predicted Score" ) + 
-  xlab("prediction")+
-  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
-  theme_economist()
-
-
-accuracy_glm <- show_accuracy_for_cutoffs( train = train_predictions, test = test_predictions, valid = valid_predictions,
-                                     predict = "model_glm_after_step_pred", actual = "target" )
+accuracy_glm <- show_accuracy_for_cutoffs(train = train_predictions,
+                                          test = test_predictions,
+                                          valid = valid_predictions,
+                                          predict = "model_glm_after_step_pred",
+                                          actual = "target",
+                                          cutoffmax = 0.35 , cutoffmin = 0.1)
 
 accuracy_glm$plot
 accuracy_glm$data
 
+confusionMatrix(table( as.numeric( train_predictions$model_glm_after_step_pred > 0.35 ), train_predictions$target ))
+confusionMatrix(table( as.numeric( test_predictions$model_glm_after_step_pred > 0.35 ), test_predictions$target ))
+confusionMatrix(table( as.numeric( valid_predictions$model_glm_after_step_pred > 0.35 ), valid_predictions$target ))
+
+ggplot(train_predictions, aes(model_glm_after_step_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The training dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
+
+ggplot(test_predictions, aes(model_glm_after_step_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The testing dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
+
+ggplot(valid_predictions, aes(model_glm_after_step_pred, color = target ) ) +
+  geom_density( size = 1 ) +
+  ggtitle( "The validation dataset's Predicted Score" ) + 
+  xlab("prediction")+
+  scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+  theme_economist()
 ```
 
 
-#### Packages **caret** and **tidymodels**
 
 
+## ML with **caret** 
 
 
-```{r glm_caret, message = FALSE, warning = FALSE, echo = FALSE}
+- feature selection (rfe)
 
-# default_glm_model = train(
-#   form = target ~ .,
-#   data = dataTrainWithNewFeatures,
-#   trControl = trainControl(method = "cv", number = 5),
-#   method = "glm",
-#   family = "binomial",
-#   metric = "ROC"
-# )
-# 
-# default_glm_model$finalModel
-# summary(default_glm_model)
-# 
-# 
-# 
-# ctrl <- 
-#   trainControl(method = "repeatedcv", 
-#                number = 5,
-#                repeats = 1,
-#                classProbs = TRUE,
-#                summaryFunction = twoClassSummary,
-#                verboseIter = FALSE,
-#                allowParallel = TRUE)
-# 
-# model_rf <-
-#   train(target ~ .,
-#         data = dataTrainWithNewFeatures,
-#         method = 'rf',
-#         ntree = 10,
-#         metric = "ROC",
-#         preProc = c("center", "scale"),
-#         trControl = ctrl)
-# 
-# 
-# 
-# model_rf <- randomForest::randomForest(target ~., data = dataTrainWithNewFeatures, importance = TRUE)
-# 
-# predTest <- dataTest$target
-# pred_rf <- predict(model_rf,newdata =  dataTest, type = "prob")
-# pred_rf <- as.data.frame(pred_rf)
-# pred_rf$target <- dataTest$target
+- modeling
 
-```
+- tunning parameters 
 
-
-#### The evaluation logistic regression models fit and accuracy
-
-#### Confusion Matrix
-
-cut off 
-
-When using the model to actually predict who is the bad customer a cut-off point has to be defined. 
-Confusion Matrix allows the easier observation of some classification properties (e.g. cost incurred in case of incorrect classification).
-
-
-
-##### cut off
-
-A measure that is often used to validate logistic regression is the AUC (Area Under ROC Curve).
-Gini indicator (GC = 2*AUC-1)
-
- 
-```{r logisticRegressionWithWoe, message = FALSE, warning = FALSE, echo = FALSE }
-
-# dataSetWithVariablesCodedWoe <- assignWoeValueInVariables(variables_name = continuous_variables,
-#                                                           listOfWoe = informationTableSelectedVariables,
-#                                                           data = dataTrainWithNewFeatures)
-# 
-# dataSetWithVariablesCodedWoe[["home_ownership_woe"]] <- as.factor(with(dataTrainWithNewFeatures,
-#                                                                        dplyr::case_when(
-#                                                                          home_ownership == "MORTGAGE" ~ -0.19739742,
-#                                                                          home_ownership == "OWN"  ~ 0.07469287,
-#                                                                          home_ownership == "RENT" ~ 0.17447816)))
-# 
-# dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>% dplyr::select(contains("_woe"))
-# dataSetWithVariablesCodedWoe[["target"]] <- dataTrainWithNewFeatures$target
-# dataSetWithVariablesCodedWoe <- dataSetWithVariablesCodedWoe %>%
-#   mutate_at(c("annual_inc_woe", "dti_woe", "tot_cur_bal_woe", "total_rev_hi_lim_woe", "revol_util_woe", "total_acc_woe", "home_ownership_woe"), funs(as.numeric(as.character(.))))
-
-
-```
-
-
-Lets evaluate the model `model_lr_woe` performance. To do that lets use a train and also test and valid dataset to predict the target variable on unseen (test, valid) data. Predictions of the target variable are probabilities of default. Using this information allows us to evaluate the chosen threshold.
+It is important to determine the important variables first before feeding them to the ML algorithm.
+For example, a good way is to use *the recursive feature elimination (RFE)* (backwards selection of predictors based on predictor importance ranking). 
 
 
 
@@ -627,10 +598,17 @@ Lets evaluate the model `model_lr_woe` performance. To do that lets use a train 
 
 
 
-I think it still exists a better way to achieve more satisfying classification results. Maybe it depends on the time samples or the definition of the target. Maybe more work is needed at creating better new features from an existing dataset.
 
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
-- **Session Info**
+I think it is still exists a better way to achieve more satisfying classification results. Maybe it depends on the time samples or the definition of the target. Maybe more work is needed at creating better new features from an existing dataset. 
+
+Session Info
 
 ```{r session_info, message = FALSE, warning = FALSE, echo = FALSE}
 sessionInfo()

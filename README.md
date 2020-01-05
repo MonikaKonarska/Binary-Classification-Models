@@ -9,7 +9,8 @@ Project Status:
 
 ## Project Intro/Objective
 
-The purpose of this project is use posibilities of machine learning, statistics to modelling in R credit default data. In this repository you can find also some solutions about data cleaning, data enginerring or some methods how present data at charts using R programming.
+The purpose of this project is use posibilities of machine learning, statistics to modelling in R credit default data. In this repository you can find also some solutions about data cleaning, data enginerring or some methods how present data at charts using R programming. The classification goal is to predict which class the loan
+belongs to: either Default or Fully Paid.
 
 To solve the classification problem (customer is bad or good) I used some algorithms:
 
@@ -20,6 +21,9 @@ To solve the classification problem (customer is bad or good) I used some algori
 - Bagging with Random Forests,
 
 - Boosting with AdaBoost.
+
+The confusion matrix was used as a metric to evaluate classification performance and also measure precision, recall, f1-score, Kappa index. 
+
 
 
 ### Data science workflow :pencil: :book:
