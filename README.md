@@ -1,4 +1,4 @@
-# **Credit scoring - Lending Club Loan Data**
+# **Binary classification problem - Lending Club Loan Data**
 
 Project Status: 
 
@@ -61,9 +61,7 @@ The confusion matrix was used as a metric to evaluate classification performance
 ### How to start ?
 
 You can start with the `main.R` script.
-Dataset used from **Kaggle Lending Club**. To import dataset it is needed to download a file <em>loan.csv</em> from this [website](https://www.kaggle.com/wendykan/lending-club-loan-data). 
-
-This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. 
+Dataset used from **Kaggle Lending Club**. To import dataset it is needed to download a file <em>loan.csv</em> from this [website](https://www.kaggle.com/wendykan/lending-club-loan-data). This file contains loan data for all loans issued through the 2007-2015. The file is a matrix of about 890 thousand observations and 75 variables. 
 
 
 
