@@ -40,6 +40,21 @@ source(file.path(functionPath, "functions.R"))
 source(file.path(functionPath, "functionsToVisualize.R"))
 source(file.path(functionPath, "remove_outliers.R"))
 source(file.path(functionPath, "..", "3_feature_engineering.R"))
+load(file = file.path(folderToSavecalculations, "resultsOfIV_allvariables.Rdata"))
+load(file = file.path(folderToSavecalculations, "iv_in_variable_bins_plots.Rdata"))
+load(file = file.path(folderToSavecalculations, 'iVForSelectedcontinuousVariablesWithChoosenBins.Rdata'))
+load(file = file.path(folderToSavecalculations, "listOfSeletedVariables.Rdata"))
+load(file = file.path(folderToSavecalculations, "categorisationVariableParametrs.Rdata"))
+load(file = file.path(dataPath, "dataNew.Rdata"))
+load(file = file.path(dataPath, "dataTrainWithNewFeatures.Rdata"))
+load(file = file.path(folderToSavecalculations, "own_choosen_variables_using_owe.Rdata")) ##dane do modelu logistycznego, gdzie sama wybralam bins do 
+load(file = file.path(folderToSavecalculations, "plots_iv_in_time_for_choosen_variables.Rdata"))
+load(file = file.path(folderToSavePlots, "listOfPlotsTimeSeries.Rdata"))
+dataTrainWithNewFeatures    <- dataTrainWithNewFeatures[, which(!names(dataTrainWithNewFeatures) %in% c("quarter", "month"))]
+variablesName               <- names(dataTrainWithNewFeatures)[which(!names(dataTrainWithNewFeatures) %in% groupedVariables)]
+continuous_variables        <- listOfSeletedVariables$continuous
+discrete_variables          <- listOfSeletedVariables$discrete
+
 ```
 <br/>
 <br/>
